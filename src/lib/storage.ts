@@ -1,7 +1,22 @@
+import { RAW_NOTES } from '../data/notes'
 import { parseNotes } from '../data/parse'
 import type { AppState, ExerciseDef, Prefs, WorkSet } from './types'
 
 const KEY = 'workout-tracker/v1'
+
+/**
+ * Cheap fingerprint of the notes file. When it changes the catalog is rebuilt
+ * on the next load, so editing notes.ts and redeploying is enough — no need to
+ * remember to hit "Reload exercises from notes".
+ */
+function hashNotes(text: string): string {
+  let h = 2166136261
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return (h >>> 0).toString(36)
+}
 
 export const DEFAULT_PREFS: Prefs = {
   restSeconds: 90,
@@ -17,6 +32,7 @@ export function freshState(): AppState {
   const { defs, seeds } = parseNotes()
   return {
     version: 1,
+    notesHash: hashNotes(RAW_NOTES),
     catalog: defs,
     seeds,
     sessions: [],
@@ -32,7 +48,7 @@ export function loadState(): AppState {
     if (!raw) return freshState()
     const parsed = JSON.parse(raw) as Partial<AppState>
     const base = freshState()
-    return {
+    const state: AppState = {
       ...base,
       ...parsed,
       prefs: { ...base.prefs, ...(parsed.prefs ?? {}) },
@@ -42,6 +58,7 @@ export function loadState(): AppState {
       choicePicks: parsed.choicePicks ?? {},
       active: parsed.active ?? null,
     }
+    return state.notesHash === base.notesHash ? state : mergeFromNotes(state)
   } catch {
     return freshState()
   }
@@ -56,8 +73,12 @@ export function saveState(state: AppState): void {
 }
 
 /**
- * Re-read the notes file: pick up new exercises and changed structure while
- * keeping every set you've logged and every note you've added in the app.
+ * Rebuild the catalog from the notes: pick up new exercises and structural
+ * changes while keeping every set you've logged and every note you've added.
+ *
+ * Exercises no longer in the notes are retired rather than deleted, so old
+ * sessions and progress charts that reference them still render — they just
+ * stop being offered in new workouts.
  */
 export function mergeFromNotes(state: AppState): AppState {
   const { defs, seeds } = parseNotes()
@@ -66,9 +87,16 @@ export function mergeFromNotes(state: AppState): AppState {
     const prev = existing.get(d.id)
     return prev ? { ...d, note: prev.note ?? d.note } : d
   })
-  const custom = state.catalog.filter((d) => !defs.some((n) => n.id === d.id))
+  const dropped = state.catalog
+    .filter((d) => !defs.some((n) => n.id === d.id))
+    .map((d) => ({ ...d, retired: true }))
   const mergedSeeds: Record<string, WorkSet[]> = { ...seeds, ...state.seeds }
-  return { ...state, catalog: [...catalog, ...custom], seeds: mergedSeeds }
+  return {
+    ...state,
+    notesHash: hashNotes(RAW_NOTES),
+    catalog: [...catalog, ...dropped],
+    seeds: mergedSeeds,
+  }
 }
 
 export function downloadBackup(state: AppState): void {
@@ -86,11 +114,13 @@ export async function readBackup(file: File): Promise<AppState> {
   const parsed = JSON.parse(text) as Partial<AppState>
   if (!parsed || !Array.isArray(parsed.sessions)) throw new Error('Not a workout backup file')
   const base = freshState()
-  return {
+  const state = {
     ...base,
     ...parsed,
     prefs: { ...base.prefs, ...(parsed.prefs ?? {}) },
     catalog: parsed.catalog?.length ? parsed.catalog : base.catalog,
     seeds: { ...base.seeds, ...(parsed.seeds ?? {}) },
   } as AppState
+  // A backup taken before a notes edit still lands on the current exercises.
+  return state.notesHash === base.notesHash ? state : mergeFromNotes(state)
 }

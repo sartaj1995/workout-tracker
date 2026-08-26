@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { formatSets, isLogged, score, suggestion, unitLabel } from '../lib/calc'
-import { useStore } from '../lib/state'
+import { formatSets, isLogged, plural, score, suggestion, unitLabel } from '../lib/calc'
+import { useStore } from '../lib/store'
 import type { ExerciseDef, WorkSet } from '../lib/types'
 import { Icon } from './Icon'
 import { NumberField, Sheet } from './ui'
@@ -12,13 +12,13 @@ interface Props {
   sets: WorkSet[]
   prev: WorkSet[]
   members: ExerciseDef[]
-  extra?: boolean
   onLogged: () => void
 }
 
-export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Props) {
+export function ExerciseCard({ def, sets, prev, members, onLogged }: Props) {
   const store = useStore()
   const [editingNote, setEditingNote] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(false)
   const [noteDraft, setNoteDraft] = useState(def.note ?? '')
 
   const doneCount = sets.filter((s) => s.done).length
@@ -208,12 +208,38 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
             <Icon name="plus" size={14} /> note
           </button>
         ) : null}
-        {extra ? (
-          <button className="chip" onClick={() => store.removeExtra(def.id)}>
-            remove
-          </button>
-        ) : null}
+        <button
+          className="chip"
+          onClick={() => (doneCount > 0 ? setConfirmRemove(true) : store.removeExercise(def.id))}
+        >
+          <Icon name="x" size={14} /> skip today
+        </button>
       </div>
+
+      {confirmRemove ? (
+        <Sheet title={`Skip ${def.name}?`} onClose={() => setConfirmRemove(false)}>
+          <p className="small muted" style={{ marginTop: 0 }}>
+            {plural(doneCount, 'set')} already logged here. Skipping drops{' '}
+            {doneCount === 1 ? 'it' : 'them'} from today — the exercise itself stays in your plan,
+            and you can add it back from the bottom of the session.
+          </p>
+          <div className="row">
+            <button className="btn ghost" onClick={() => setConfirmRemove(false)}>
+              Keep it
+            </button>
+            <div className="spacer" />
+            <button
+              className="btn danger"
+              onClick={() => {
+                store.removeExercise(def.id)
+                setConfirmRemove(false)
+              }}
+            >
+              Skip anyway
+            </button>
+          </div>
+        </Sheet>
+      ) : null}
 
       {editingNote ? (
         <Sheet title={`Note — ${def.name}`} onClose={() => setEditingNote(false)}>

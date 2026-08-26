@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { formatDate, formatSets, round, unitLabel } from '../lib/calc'
-import { useStore } from '../lib/state'
+import { useStore } from '../lib/store'
 import type { ExerciseDef } from '../lib/types'
 import { DAYS } from '../data/parse'
 
@@ -28,8 +28,8 @@ function Chart({ points, def }: { points: { at: number; top: number }[]; def: Ex
     <svg className="chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${def.name} progress`}>
       <defs>
         <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -51,7 +51,7 @@ function Chart({ points, def }: { points: { at: number; top: number }[]; def: Ex
       ))}
 
       <path d={area} fill="url(#fade)" />
-      <path d={line} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+      <path d={line} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" />
 
       {points.map((p, i) => (
         <circle
@@ -59,7 +59,7 @@ function Chart({ points, def }: { points: { at: number; top: number }[]; def: Ex
           cx={x(i)}
           cy={y(p.top)}
           r={i === points.length - 1 ? 3.6 : 2.2}
-          fill={p.top === max ? 'var(--warn)' : 'var(--accent)'}
+          fill={p.top === max ? 'var(--warn)' : 'var(--primary)'}
         />
       ))}
 

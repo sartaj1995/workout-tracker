@@ -36,6 +36,11 @@ export interface ExerciseDef {
   /** Setup reminders: seat height, pin position, progression targets. */
   note?: string
   targetSets: number
+  /**
+   * Dropped from the notes but kept in the catalog, so past sessions and
+   * charts that reference it still render. Never offered in a new workout.
+   */
+  retired?: boolean
 }
 
 export interface LoggedExercise {
@@ -66,6 +71,8 @@ export interface Prefs {
 
 export interface AppState {
   version: number
+  /** Fingerprint of the notes the catalog was built from. */
+  notesHash: string
   catalog: ExerciseDef[]
   /** Last performed sets per exercise, used to prefill the next session. */
   seeds: Record<string, WorkSet[]>
