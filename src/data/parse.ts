@@ -126,5 +126,25 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
     seeds[id] = sets
   }
 
-  return { defs, seeds }
+  return { defs: stabiliseChoiceIds(defs), seeds }
+}
+
+/**
+ * Re-key OR groups by their members instead of by position.
+ *
+ * Positional ids ("choice-1", "choice-2") shift whenever a group is added or
+ * removed higher up the notes, which would silently move a stored choice onto
+ * a different pair of exercises.
+ */
+function stabiliseChoiceIds(defs: ExerciseDef[]): ExerciseDef[] {
+  const members = new Map<string, string[]>()
+  for (const d of defs) {
+    if (!d.choiceId) continue
+    const list = members.get(d.choiceId) ?? []
+    list.push(d.id)
+    members.set(d.choiceId, list)
+  }
+  const stable = new Map<string, string>()
+  for (const [temp, ids] of members) stable.set(temp, `choice:${[...ids].sort().join('+')}`)
+  return defs.map((d) => (d.choiceId ? { ...d, choiceId: stable.get(d.choiceId) } : d))
 }

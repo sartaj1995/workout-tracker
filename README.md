@@ -73,6 +73,11 @@ Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
 
+Whichever side of an `OR` pair is listed **first** is the one offered by
+default. Because the notes decide that, editing them clears any choice you'd
+swapped to inside the app — otherwise an old in-app pick would quietly override
+the order you just wrote.
+
 ## Backups
 
 Data lives in `localStorage`, so clearing your browser data erases it.

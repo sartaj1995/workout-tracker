@@ -96,6 +96,9 @@ export function mergeFromNotes(state: AppState): AppState {
     notesHash: hashNotes(RAW_NOTES),
     catalog: [...catalog, ...dropped],
     seeds: mergedSeeds,
+    // Notes are the source of truth for which side of an OR pair leads, so an
+    // in-app swap must not outlive the edit that changed the order.
+    choicePicks: {},
   }
 }
 
