@@ -1,0 +1,228 @@
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { cloneSet, emptySet, isLogged, score, topScore } from './calc'
+import { resolveDay } from './plan'
+import { loadState, mergeFromNotes, saveState } from './storage'
+import type { AppState, DayId, ExerciseDef, Prefs, Session, WorkSet } from './types'
+
+const uid = () => Math.random().toString(36).slice(2, 10)
+
+/**
+ * A fresh, empty set list shaped like last time's: same number of sets and the
+ * same drop-set structure. Last time's numbers show as ghost placeholders, so
+ * checking a set off without typing logs exactly what you did before.
+ */
+function startingSets(state: AppState, def: ExerciseDef): WorkSet[] {
+  const seed = state.seeds[def.id]
+  const count = seed?.length || def.targetSets
+  return Array.from({ length: count }, (_, i) => ({
+    ...emptySet(),
+    drops: (seed?.[i]?.drops ?? []).map(() => ({ weight: null, reps: null })),
+  }))
+}
+
+interface Store {
+  state: AppState
+  defs: Record<string, ExerciseDef>
+  update: (fn: (s: AppState) => AppState) => void
+  startSession: (day: DayId) => void
+  discardSession: () => void
+  finishSession: () => void
+  patchSet: (exerciseId: string, index: number, patch: Partial<WorkSet>) => void
+  addSet: (exerciseId: string) => void
+  removeSet: (exerciseId: string, index: number) => void
+  addDrop: (exerciseId: string, index: number) => void
+  patchDrop: (exerciseId: string, index: number, di: number, patch: Partial<WorkSet>) => void
+  removeDrop: (exerciseId: string, index: number, di: number) => void
+  swapChoice: (choiceId: string, newId: string) => void
+  addExtra: (exerciseId: string) => void
+  removeExtra: (exerciseId: string) => void
+  setNote: (exerciseId: string, note: string) => void
+  setPrefs: (patch: Partial<Prefs>) => void
+  reloadNotes: () => void
+  replaceState: (next: AppState) => void
+  bestEver: (exerciseId: string) => number
+  historyFor: (exerciseId: string) => { at: number; top: number; sets: WorkSet[] }[]
+}
+
+const Ctx = createContext<Store | null>(null)
+
+export function StoreProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<AppState>(loadState)
+  const first = useRef(true)
+
+  useEffect(() => {
+    if (first.current) {
+      first.current = false
+      return
+    }
+    saveState(state)
+  }, [state])
+
+  const store = useMemo<Store>(() => {
+    const update = (fn: (s: AppState) => AppState) => setState(fn)
+
+    const inActive = (exerciseId: string, fn: (sets: WorkSet[]) => WorkSet[]) =>
+      update((s) => {
+        if (!s.active) return s
+        return {
+          ...s,
+          active: {
+            ...s.active,
+            entries: s.active.entries.map((e) =>
+              e.exerciseId === exerciseId ? { ...e, sets: fn(e.sets) } : e,
+            ),
+          },
+        }
+      })
+
+    const defs = Object.fromEntries(state.catalog.map((d) => [d.id, d])) as Record<string, ExerciseDef>
+
+    return {
+      state,
+      defs,
+      update,
+
+      startSession: (day) =>
+        update((s) => {
+          const entries = resolveDay(s, day, false).map((def) => ({
+            exerciseId: def.id,
+            sets: startingSets(s, def),
+          }))
+          const session: Session = { id: uid(), day, startedAt: Date.now(), entries }
+          return { ...s, active: session }
+        }),
+
+      discardSession: () => update((s) => ({ ...s, active: null })),
+
+      finishSession: () =>
+        update((s) => {
+          if (!s.active) return s
+          const entries = s.active.entries
+            .map((e) => ({ ...e, sets: e.sets.filter((set) => isLogged(set, defs[e.exerciseId])) }))
+            .filter((e) => e.sets.length > 0)
+          if (entries.length === 0) return { ...s, active: null }
+          const done: Session = { ...s.active, entries, finishedAt: Date.now() }
+          const seeds = { ...s.seeds }
+          for (const e of entries) seeds[e.exerciseId] = e.sets.map(cloneSet)
+          return { ...s, active: null, seeds, sessions: [done, ...s.sessions] }
+        }),
+
+      patchSet: (exerciseId, index, patch) =>
+        inActive(exerciseId, (sets) => sets.map((s, i) => (i === index ? { ...s, ...patch } : s))),
+
+      addSet: (exerciseId) => inActive(exerciseId, (sets) => [...sets, emptySet()]),
+
+      removeSet: (exerciseId, index) => inActive(exerciseId, (sets) => sets.filter((_, i) => i !== index)),
+
+      addDrop: (exerciseId, index) =>
+        inActive(exerciseId, (sets) =>
+          sets.map((s, i) => {
+            if (i !== index) return s
+            const last = s.drops[s.drops.length - 1]
+            const from = last ?? { weight: s.weight, reps: s.reps }
+            return { ...s, drops: [...s.drops, { weight: from.weight, reps: null }] }
+          }),
+        ),
+
+      patchDrop: (exerciseId, index, di, patch) =>
+        inActive(exerciseId, (sets) =>
+          sets.map((s, i) =>
+            i === index ? { ...s, drops: s.drops.map((d, j) => (j === di ? { ...d, ...patch } : d)) } : s,
+          ),
+        ),
+
+      removeDrop: (exerciseId, index, di) =>
+        inActive(exerciseId, (sets) =>
+          sets.map((s, i) => (i === index ? { ...s, drops: s.drops.filter((_, j) => j !== di) } : s)),
+        ),
+
+      swapChoice: (choiceId, newId) =>
+        update((s) => {
+          const picks = { ...s.choicePicks, [choiceId]: newId }
+          if (!s.active) return { ...s, choicePicks: picks }
+          const members = s.catalog.filter((d) => d.choiceId === choiceId).map((d) => d.id)
+          const next = { ...s, choicePicks: picks }
+          const def = s.catalog.find((d) => d.id === newId)
+          if (!def) return next
+          const entries = s.active.entries.map((e) =>
+            members.includes(e.exerciseId) && e.exerciseId !== newId
+              ? { exerciseId: newId, sets: startingSets(next, def) }
+              : e,
+          )
+          return { ...next, active: { ...s.active, entries } }
+        }),
+
+      addExtra: (exerciseId) =>
+        update((s) => {
+          if (!s.active || s.active.entries.some((e) => e.exerciseId === exerciseId)) return s
+          const def = s.catalog.find((d) => d.id === exerciseId)
+          if (!def) return s
+          return {
+            ...s,
+            active: {
+              ...s.active,
+              entries: [...s.active.entries, { exerciseId, sets: startingSets(s, def) }],
+            },
+          }
+        }),
+
+      removeExtra: (exerciseId) =>
+        update((s) =>
+          s.active
+            ? {
+                ...s,
+                active: { ...s.active, entries: s.active.entries.filter((e) => e.exerciseId !== exerciseId) },
+              }
+            : s,
+        ),
+
+      setNote: (exerciseId, note) =>
+        update((s) => ({
+          ...s,
+          catalog: s.catalog.map((d) => (d.id === exerciseId ? { ...d, note: note.trim() || undefined } : d)),
+        })),
+
+      setPrefs: (patch) => update((s) => ({ ...s, prefs: { ...s.prefs, ...patch } })),
+
+      reloadNotes: () => update((s) => mergeFromNotes(s)),
+
+      replaceState: (next) => setState(next),
+
+      bestEver: (exerciseId) => {
+        const def = defs[exerciseId]
+        if (!def) return 0
+        let best = 0
+        for (const s of state.sessions) {
+          const entry = s.entries.find((e) => e.exerciseId === exerciseId)
+          if (entry) best = Math.max(best, topScore(entry.sets, def))
+        }
+        return best
+      },
+
+      historyFor: (exerciseId) => {
+        const def = defs[exerciseId]
+        if (!def) return []
+        return state.sessions
+          .filter((s) => s.entries.some((e) => e.exerciseId === exerciseId))
+          .map((s) => {
+            const entry = s.entries.find((e) => e.exerciseId === exerciseId)
+            const sets = entry ? entry.sets : []
+            return {
+              at: s.finishedAt ?? s.startedAt,
+              top: Math.max(...sets.map((x) => score(x, def)), 0),
+              sets,
+            }
+          })
+          .sort((a, b) => a.at - b.at)
+      },
+    }
+  }, [state])
+
+  return <Ctx.Provider value={store}>{children}</Ctx.Provider>
+}
+
+export function useStore(): Store {
+  const ctx = useContext(Ctx)
+  if (!ctx) throw new Error('useStore must be used inside StoreProvider')
+  return ctx
+}
