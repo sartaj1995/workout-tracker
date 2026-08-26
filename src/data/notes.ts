@@ -13,34 +13,35 @@
  */
 export const RAW_NOTES = `
 Push
-Chest press (sitting) - 85x9 80x8 75x8 70x8+55x3+45x3
-OR
 Dumbbell press - 30x10 25x11 25x10 25x9
+OR
+Chest press (sitting) - 85x9 80x8 75x8 70x8+55x3+45x3
 Cable fly (down) - 40x6 35x9 30x11
 OR
 Pec fly - 70x9 65x9 60x12
 Lateral raise - 25x7 22.5x9 22.5x8 20x11+15x4+10x4+7.5x5
 OR
 Lateral raise machine - 45x13 40x11 40x11 40x10+30x5+20x6
-Dumbbell shoulder press - 15x10 15x10 17.5x8 17.5x9
+Tricep pushdown (single) - 25x8 20x12 20x8 20x7
+OR
 Tricep pushdown (cable) - 80x7 70x10 70x7 65x8+55x4+45x4+35x3
 OR
 Tricep pushdown (bar) - 75x10 70x10 65x10 65x9+50x5+40x5+30x5+25x5
 OR
 Overhead raise - 12.5x7 10x11 10x9 10x
-OR
-Tricep pushdown (single) - 25x8 20x12 20x8 20x7
+
+Dumbbell shoulder press - 15x10 15x10 17.5x8 17.5x9
 
 Pull
-Machine row - 80x9 75x8 70x9 70x8
-OR
 Chest sup row - 60x8 55x10 50x9 45x11
-Shrugs - 45x10 45x9 40x11
+OR
+Machine row - 80x9 75x8 70x9 70x8
 Lat pulldown (neutral) - 80x10 75x9 75x8 70x9+50x5+35x9 (make 55 n 45)
 Face pulls - 70x10 65x11 60x12 60x12+50x5+40x6+30x6
+Shrugs - 45x10 45x9 40x11
+Rear delt fly - 60x12 60x12 55x12 (start from 65)
 Hanging (sec) - 38 33 35
 Hammer curls (sitting, alternate) - 12.5x13 15x10 15x9 17.5x7+12.5x6
-Rear delt fly - 60x12 60x12 55x12 (start from 65)
 
 Inc Bench row (1st stop) - 30x8 30x7 30x7 30x
 Bicep curls (sitting, cable) - 6x11 6x10 7x8 7x7+4x8+3x8
