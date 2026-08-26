@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { formatSets, plural, relativeDay } from '../lib/calc'
 import { resolveDay } from '../lib/plan'
-import { useStore } from '../lib/state'
+import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
 import type { DayId } from '../lib/types'
 import { DAYS } from '../data/parse'

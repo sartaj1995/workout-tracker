@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { formatClock, formatDate, formatSets, plural, sessionVolume, startOfDay } from '../lib/calc'
-import { useStore } from '../lib/state'
+import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
 import { DAYS } from '../data/parse'
 import { Icon } from './Icon'

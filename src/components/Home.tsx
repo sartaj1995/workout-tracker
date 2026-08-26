@@ -1,6 +1,6 @@
 import { plural, relativeDay, startOfDay } from '../lib/calc'
 import { resolveDay } from '../lib/plan'
-import { useStore } from '../lib/state'
+import { useStore } from '../lib/store'
 import type { DayId } from '../lib/types'
 import { DAYS } from '../data/parse'
 import { DAY_COLOR, DAY_SHORT } from '../lib/theme'

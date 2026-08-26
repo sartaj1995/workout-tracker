@@ -7,7 +7,7 @@ import { ProgressView } from './components/ProgressView'
 import { RestBar } from './components/RestBar'
 import { SessionView } from './components/SessionView'
 import { SettingsView } from './components/SettingsView'
-import { useStore } from './lib/state'
+import { useStore } from './lib/store'
 import { useRestTimer } from './lib/useRestTimer'
 import type { DayId } from './lib/types'
 

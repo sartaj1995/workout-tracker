@@ -32,7 +32,6 @@ OR
 Tricep pushdown (single) - 25x8 20x12 20x8 20x7
 
 Pull
-Pull-ups - 8 7
 Machine row - 80x9 75x8 70x9 70x8
 OR
 Chest sup row - 60x8 55x10 50x9 45x11
@@ -57,7 +56,6 @@ Single arm row - 20x12 25x10 30x7 30x8
 Deadlift - 20x15 25x12 30x10 35x8
 
 Legs
-Free squats - 20 20 20
 Leg press - 120x12 120x9 110x10 100x12 (start from 130)
 Leg extension - 102.5x10 102.5x10 102.5x10 102.5x10+82.5x2
 Hamstring curls - 75x10 70x10 65x11 65x10
@@ -70,8 +68,6 @@ Wall sit - 110s
  * plate rather than kilos, and which lifts aren't measured in weight x reps.
  */
 export const OVERRIDES: Record<string, { unit?: 'plate'; metric?: 'reps' | 'time' | 'weight_time' }> = {
-  'pull-ups': { metric: 'reps' },
-  'free-squats': { metric: 'reps' },
   'hanging-sec': { metric: 'time' },
   'wall-sit': { metric: 'time' },
   'farmer-carry': { metric: 'weight_time' },

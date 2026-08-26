@@ -8,7 +8,11 @@ can add to your phone's home screen and use with no signal.
   the ones that changed.
 - **This-or-that** exercises (Chest press *or* Dumbbell press) are a row of
   chips at the top of the card. Each variant keeps its own history.
-- **Extra work** sits behind one button at the bottom of the session.
+- **Extra work** sits behind one button at the bottom of the session, along
+  with anything you skipped today.
+- **Skip an exercise** you don't feel like doing and it disappears from the
+  session — tap *skip today* on its card. It stays in your plan, and adding it
+  back drops it into its original position.
 - **Drop sets** are first-class: `70x8+55x3+45x3` round-trips exactly.
 - **Rest timer** starts on its own each time you check a set off, then beeps and
   vibrates.
@@ -60,8 +64,14 @@ Machines numbered by plate rather than kilos, and lifts measured in reps or
 seconds instead of weight, are listed in `OVERRIDES` at the bottom of the same
 file.
 
-After editing, redeploy and tap **Settings → Reload exercises from notes**. New
-exercises appear and everything you've logged is left alone.
+Edit, redeploy, and the app picks the changes up on its own — it fingerprints
+the notes and rebuilds the catalog when they differ. (**Settings → Reload
+exercises from notes** forces the same thing.) Everything you've logged is left
+alone either way.
+
+Removing an exercise from the notes *retires* it rather than deleting it: it
+stops being offered in new workouts, but past sessions and its progress chart
+still render.
 
 ## Backups
 

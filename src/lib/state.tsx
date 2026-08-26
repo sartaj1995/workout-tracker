@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cloneSet, emptySet, isLogged, score, topScore } from './calc'
 import { resolveDay } from './plan'
+import { StoreCtx, type Store } from './store'
 import { loadState, mergeFromNotes, saveState } from './storage'
-import type { AppState, DayId, ExerciseDef, Prefs, Session, WorkSet } from './types'
+import type { AppState, ExerciseDef, Session, WorkSet } from './types'
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
@@ -19,32 +20,6 @@ function startingSets(state: AppState, def: ExerciseDef): WorkSet[] {
     drops: (seed?.[i]?.drops ?? []).map(() => ({ weight: null, reps: null })),
   }))
 }
-
-interface Store {
-  state: AppState
-  defs: Record<string, ExerciseDef>
-  update: (fn: (s: AppState) => AppState) => void
-  startSession: (day: DayId) => void
-  discardSession: () => void
-  finishSession: () => void
-  patchSet: (exerciseId: string, index: number, patch: Partial<WorkSet>) => void
-  addSet: (exerciseId: string) => void
-  removeSet: (exerciseId: string, index: number) => void
-  addDrop: (exerciseId: string, index: number) => void
-  patchDrop: (exerciseId: string, index: number, di: number, patch: Partial<WorkSet>) => void
-  removeDrop: (exerciseId: string, index: number, di: number) => void
-  swapChoice: (choiceId: string, newId: string) => void
-  addExtra: (exerciseId: string) => void
-  removeExtra: (exerciseId: string) => void
-  setNote: (exerciseId: string, note: string) => void
-  setPrefs: (patch: Partial<Prefs>) => void
-  reloadNotes: () => void
-  replaceState: (next: AppState) => void
-  bestEver: (exerciseId: string) => number
-  historyFor: (exerciseId: string) => { at: number; top: number; sets: WorkSet[] }[]
-}
-
-const Ctx = createContext<Store | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(loadState)
@@ -152,21 +127,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return { ...next, active: { ...s.active, entries } }
         }),
 
-      addExtra: (exerciseId) =>
+      addExercise: (exerciseId) =>
         update((s) => {
           if (!s.active || s.active.entries.some((e) => e.exerciseId === exerciseId)) return s
           const def = s.catalog.find((d) => d.id === exerciseId)
           if (!def) return s
-          return {
-            ...s,
-            active: {
-              ...s.active,
-              entries: [...s.active.entries, { exerciseId, sets: startingSets(s, def) }],
-            },
+          const entry = { exerciseId, sets: startingSets(s, def) }
+
+          // Put a skipped exercise back where the plan had it; extras go last.
+          const plan = resolveDay(s, s.active.day, false).map((d) => d.id)
+          const rank = plan.indexOf(exerciseId)
+          const entries = [...s.active.entries]
+          if (rank !== -1) {
+            const at = entries.findIndex((e) => {
+              const r = plan.indexOf(e.exerciseId)
+              return r === -1 || r > rank
+            })
+            entries.splice(at === -1 ? entries.length : at, 0, entry)
+          } else {
+            entries.push(entry)
           }
+          return { ...s, active: { ...s.active, entries } }
         }),
 
-      removeExtra: (exerciseId) =>
+      removeExercise: (exerciseId) =>
         update((s) =>
           s.active
             ? {
@@ -218,11 +202,5 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state])
 
-  return <Ctx.Provider value={store}>{children}</Ctx.Provider>
-}
-
-export function useStore(): Store {
-  const ctx = useContext(Ctx)
-  if (!ctx) throw new Error('useStore must be used inside StoreProvider')
-  return ctx
+  return <StoreCtx.Provider value={store}>{children}</StoreCtx.Provider>
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { formatClock, formatSets, plural } from '../lib/calc'
 import { resolveDay } from '../lib/plan'
-import { useStore } from '../lib/state'
+import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
+import type { ExerciseDef } from '../lib/types'
 import type { RestTimer } from '../lib/useRestTimer'
 import { DAYS } from '../data/parse'
 import { ExerciseCard } from './ExerciseCard'
@@ -24,10 +25,17 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
   if (!session) return null
 
   const day = DAYS.find((d) => d.id === session.day)
-  const extras = resolveDay(store.state, session.day, true)
-  const coreIds = new Set(resolveDay(store.state, session.day, false).map((d) => d.id))
+  const inSession = new Set(session.entries.map((e) => e.exerciseId))
+  const skipped = resolveDay(store.state, session.day, false).filter((d) => !inSession.has(d.id))
+  const extras = resolveDay(store.state, session.day, true).filter((d) => !inSession.has(d.id))
+  const available = skipped.length + extras.length
   const elapsed = Math.floor((now - session.startedAt) / 1000)
   const loggedSets = session.entries.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0)
+
+  function pick(id: string) {
+    store.addExercise(id)
+    setShowExtras(false)
+  }
 
   return (
     <div className="app" style={{ '--dc': DAY_COLOR[session.day] } as React.CSSProperties}>
@@ -57,15 +65,14 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
               sets={entry.sets}
               prev={store.state.seeds[entry.exerciseId] ?? []}
               members={members}
-              extra={!coreIds.has(entry.exerciseId)}
               onLogged={() => rest.start()}
             />
           )
         })}
 
-        {extras.length ? (
+        {available ? (
           <button className="btn block ghost" onClick={() => setShowExtras(true)}>
-            <Icon name="plus" size={17} /> Extra work · {extras.length} available
+            <Icon name="plus" size={17} /> Add exercise · {available} available
           </button>
         ) : null}
       </div>
@@ -79,33 +86,26 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
       </div>
 
       {showExtras ? (
-        <Sheet title="Extra work" onClose={() => setShowExtras(false)}>
-          <p className="small muted" style={{ marginTop: 0 }}>
-            Tap to add to today's session.
-          </p>
-          {store.state.catalog
-            .filter((d) => d.day === session.day && d.optional)
-            .map((d) => {
-              const already = session.entries.some((e) => e.exerciseId === d.id)
-              const prev = store.state.seeds[d.id] ?? []
-              return (
-                <button
-                  key={d.id}
-                  className="card"
-                  style={{ width: '100%', textAlign: 'left', opacity: already ? 0.45 : 1 }}
-                  disabled={already}
-                  onClick={() => {
-                    store.addExtra(d.id)
-                    setShowExtras(false)
-                  }}
-                >
-                  <div style={{ fontWeight: 600 }}>{d.name}</div>
-                  <div className="small muted">
-                    {already ? 'Already added' : prev.length ? formatSets(prev, d) : 'No history yet'}
-                  </div>
-                </button>
-              )
-            })}
+        <Sheet title="Add to today" onClose={() => setShowExtras(false)}>
+          {skipped.length ? (
+            <>
+              <p className="section-title" style={{ marginTop: 0 }}>
+                Skipped today
+              </p>
+              {skipped.map((d) => (
+                <AddRow key={d.id} def={d} onPick={pick} />
+              ))}
+            </>
+          ) : null}
+
+          {extras.length ? (
+            <>
+              <p className="section-title">Extra work</p>
+              {extras.map((d) => (
+                <AddRow key={d.id} def={d} onPick={pick} />
+              ))}
+            </>
+          ) : null}
         </Sheet>
       ) : null}
 
@@ -147,5 +147,16 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
         </Sheet>
       ) : null}
     </div>
+  )
+}
+
+function AddRow({ def, onPick }: { def: ExerciseDef; onPick: (id: string) => void }) {
+  const store = useStore()
+  const prev = store.state.seeds[def.id] ?? []
+  return (
+    <button className="card" style={{ width: '100%', textAlign: 'left' }} onClick={() => onPick(def.id)}>
+      <div style={{ fontWeight: 600 }}>{def.name}</div>
+      <div className="small muted">{prev.length ? formatSets(prev, def) : 'No history yet'}</div>
+    </button>
   )
 }

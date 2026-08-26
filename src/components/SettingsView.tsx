@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { plateBreakdown } from '../lib/calc'
-import { useStore } from '../lib/state'
+import { useStore } from '../lib/store'
 import { downloadBackup, freshState, readBackup } from '../lib/storage'
 import { Icon } from './Icon'
 import { NumberField, Toggle } from './ui'
