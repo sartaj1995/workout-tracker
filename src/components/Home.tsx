@@ -3,44 +3,110 @@ import { resolveDay } from '../lib/plan'
 import { useStore } from '../lib/state'
 import type { DayId } from '../lib/types'
 import { DAYS } from '../data/parse'
+import { DAY_COLOR, DAY_SHORT } from '../lib/theme'
+import { Icon } from './Icon'
 
-const DAY_COLOR: Record<DayId, string> = {
-  push: 'var(--push)',
-  pull: 'var(--pull)',
-  legs: 'var(--legs)',
-}
+const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
-export function Home({ onStart, onResume }: { onStart: (day: DayId) => void; onResume: () => void }) {
+export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void; onResume: () => void }) {
   const store = useStore()
   const { sessions, active } = store.state
 
   const lastOf = (day: DayId) => sessions.find((s) => s.day === day)
 
-  // Whichever day you've left longest is the one the app nudges you toward.
-  const due = [...DAYS].sort((a, b) => {
-    const la = lastOf(a.id)?.startedAt ?? 0
-    const lb = lastOf(b.id)?.startedAt ?? 0
-    return la - lb
-  })[0]
+  // Whichever day you've left longest is the one the app leads with.
+  const due = [...DAYS].sort((a, b) => (lastOf(a.id)?.startedAt ?? 0) - (lastOf(b.id)?.startedAt ?? 0))[0]
+  const showNext = sessions.length > 0 && !active
 
   const thisWeek = sessions.filter((s) => s.startedAt > Date.now() - 7 * 86400000).length
   const streak = countStreak(sessions.map((s) => s.startedAt))
 
+  // Last seven days, oldest first, so today sits on the right.
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const at = startOfDay(Date.now() - (6 - i) * 86400000)
+    const session = sessions.find((s) => startOfDay(s.startedAt) === at)
+    return { at, day: session?.day ?? null }
+  })
+
   return (
     <div className="screen">
       {active ? (
-        <button className="day-card" style={{ '--dc': DAY_COLOR[active.day] } as React.CSSProperties} onClick={onResume}>
-          <span className="dot" />
-          <span>
-            <span className="name">Resume {DAYS.find((d) => d.id === active.day)?.label}</span>
-            <span className="meta">
-              {active.entries.reduce((n, e) => n + e.sets.filter((x) => x.done).length, 0)} sets logged ·
-              started {relativeDay(active.startedAt)}
+        <button className="resume" onClick={onResume}>
+          <span className="resume__dot" />
+          <span className="resume__body">
+            <span className="resume__title">
+              {DAYS.find((d) => d.id === active.day)?.label} workout in progress
+            </span>
+            <span className="resume__meta">
+              {plural(
+                active.entries.reduce((n, e) => n + e.sets.filter((x) => x.done).length, 0),
+                'set',
+              )}{' '}
+              logged · started {relativeDay(active.startedAt)}
             </span>
           </span>
-          <span className="chev">›</span>
+          <Icon name="chevronRight" />
         </button>
       ) : null}
+
+      <p className="section-title">Choose your session</p>
+      <div className="day-grid">
+        {DAYS.map((d) => {
+          const last = lastOf(d.id)
+          const count = resolveDay(store.state, d.id, false).length
+          const extras = resolveDay(store.state, d.id, true).length
+          const isNext = showNext && due.id === d.id
+          return (
+            <button
+              key={d.id}
+              className={`day-card${isNext ? ' day-card--next' : ''}`}
+              style={{ '--dc': DAY_COLOR[d.id] } as React.CSSProperties}
+              onClick={() => onOpenDay(d.id)}
+            >
+              <span className="day-card__rail" />
+              <span className="day-card__body">
+                {isNext ? (
+                  <span className="badge">
+                    <Icon name="flame" size={12} /> Up next
+                  </span>
+                ) : null}
+                <span className="day-card__name">{d.label}</span>
+                <span className="day-card__meta">
+                  {plural(count, 'exercise')}
+                  {extras ? ` · ${extras} extra` : ''}
+                </span>
+                <span className="day-card__last">
+                  {last ? `Last trained ${relativeDay(last.startedAt)}` : 'Not trained yet'}
+                </span>
+              </span>
+              <span className="day-card__go">
+                <Icon name="chevronRight" size={22} />
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <p className="section-title">This week</p>
+      <div className="week-strip">
+        {week.map((d) => {
+          const isToday = d.at === startOfDay(Date.now())
+          const label = DAYS.find((x) => x.id === d.day)?.label
+          return (
+            <div
+              key={d.at}
+              className={`week-day${d.day ? ' week-day--done' : ''}${isToday ? ' week-day--today' : ''}`}
+              style={d.day ? ({ '--dc': DAY_COLOR[d.day] } as React.CSSProperties) : undefined}
+              title={label ? `${label} on ${new Date(d.at).toDateString()}` : 'Rest day'}
+            >
+              <span className="week-day__label">{WEEKDAY[new Date(d.at).getDay()]}</span>
+              <span className="week-day__mark" aria-label={label ? `${label} day` : 'Rest day'}>
+                {d.day ? DAY_SHORT[d.day] : ''}
+              </span>
+            </div>
+          )
+        })}
+      </div>
 
       <div className="stat-grid">
         <div className="stat">
@@ -57,45 +123,10 @@ export function Home({ onStart, onResume }: { onStart: (day: DayId) => void; onR
         </div>
       </div>
 
-      <div className="section-title">Start a workout</div>
-      <div className="day-grid">
-        {DAYS.map((d) => {
-          const last = lastOf(d.id)
-          const count = resolveDay(store.state, d.id, false).length
-          const extras = resolveDay(store.state, d.id, true).length
-          return (
-            <button
-              key={d.id}
-              className="day-card"
-              style={{ '--dc': DAY_COLOR[d.id] } as React.CSSProperties}
-              onClick={() => onStart(d.id)}
-            >
-              <span className="dot" />
-              <span>
-                <span className="name">
-                  {d.label}
-                  {!active && due.id === d.id && sessions.length > 0 ? (
-                    <span className="chip" style={{ marginLeft: 8, fontSize: 11, padding: '3px 8px' }}>
-                      up next
-                    </span>
-                  ) : null}
-                </span>
-                <span className="meta">
-                  {plural(count, 'exercise')}
-                  {extras ? ` · ${extras} extra` : ''} ·{' '}
-                  {last ? `last ${relativeDay(last.startedAt)}` : 'never done'}
-                </span>
-              </span>
-              <span className="chev">›</span>
-            </button>
-          )
-        })}
-      </div>
-
       {sessions.length === 0 ? (
-        <p className="small muted" style={{ textAlign: 'center' }}>
-          Your notes are already loaded. Pick a day and every exercise shows up with last time's
-          numbers ready to accept.
+        <p className="empty">
+          Your notes are already loaded. Open a day to look through it — nothing starts recording
+          until you tap Start workout.
         </p>
       ) : null}
     </div>

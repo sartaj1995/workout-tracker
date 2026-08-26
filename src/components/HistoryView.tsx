@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import { formatClock, formatDate, formatSets, plural, sessionVolume, startOfDay } from '../lib/calc'
 import { useStore } from '../lib/state'
-import type { DayId } from '../lib/types'
+import { DAY_COLOR } from '../lib/theme'
 import { DAYS } from '../data/parse'
-
-const DAY_COLOR: Record<DayId, string> = {
-  push: 'var(--push)',
-  pull: 'var(--pull)',
-  legs: 'var(--legs)',
-}
+import { Icon } from './Icon'
 
 export function HistoryView() {
   const store = useStore()
@@ -52,16 +47,18 @@ export function HistoryView() {
               style={{ width: '100%', textAlign: 'left', '--dc': DAY_COLOR[s.day] } as React.CSSProperties}
               onClick={() => setOpen(isOpen ? null : s.id)}
             >
-              <span className="badge">{label.slice(0, 4)}</span>
-              <span style={{ flex: 1 }}>
-                <span style={{ fontWeight: 600, display: 'block' }}>{formatDate(s.startedAt)}</span>
-                <span className="small muted">
+              <span className="hist__badge">{label}</span>
+              <span className="hist__body">
+                <span className="hist__title">{formatDate(s.startedAt)}</span>
+                <span className="hist__meta">
                   {plural(s.entries.length, 'exercise')} · {plural(sets, 'set')}
                   {mins !== null ? ` · ${mins} min` : ''}
                   {vol > 0 ? ` · ${Math.round(vol).toLocaleString()} kg` : ''}
                 </span>
               </span>
-              <span className="muted">{isOpen ? '⌄' : '›'}</span>
+              <span className="muted" style={{ display: 'grid', placeItems: 'center' }}>
+                <Icon name={isOpen ? 'chevronDown' : 'chevronRight'} />
+              </span>
             </button>
 
             {isOpen ? (

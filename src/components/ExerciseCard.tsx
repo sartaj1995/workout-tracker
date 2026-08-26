@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatSets, isLogged, score, suggestion, unitLabel } from '../lib/calc'
 import { useStore } from '../lib/state'
 import type { ExerciseDef, WorkSet } from '../lib/types'
+import { Icon } from './Icon'
 import { NumberField, Sheet } from './ui'
 
 const ghost = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n))
@@ -91,7 +92,7 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
             setEditingNote(true)
           }}
         >
-          <span>📌</span>
+          <Icon name="pin" size={15} />
           <span>{def.note}</span>
         </button>
       ) : null}
@@ -133,7 +134,7 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
                 aria-label={`Set ${i + 1} done`}
                 onClick={() => toggleDone(i)}
               >
-                ✓
+                <Icon name="check" size={20} />
               </button>
             </div>
 
@@ -152,8 +153,8 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
                   placeholder={ghost(prev[i]?.drops[di]?.reps)}
                   step={1}
                 />
-                <button className="check" onClick={() => store.removeDrop(def.id, i, di)} aria-label="Remove drop">
-                  ×
+                <button className="check" onClick={() => store.removeDrop(def.id, i, di)} aria-label="Remove drop set">
+                  <Icon name="x" size={16} />
                 </button>
               </div>
             ))}
@@ -161,7 +162,7 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
             {def.metric === 'weight_reps' && i === sets.length - 1 ? (
               <div className="ex-actions" style={{ paddingLeft: 30, paddingBottom: 4 }}>
                 <button className="chip" onClick={() => store.addDrop(def.id, i)}>
-                  ＋ drop set
+                  <Icon name="plus" size={14} /> drop set
                 </button>
               </div>
             ) : null}
@@ -171,11 +172,11 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
 
       <div className="ex-actions">
         <button className="chip" onClick={() => store.addSet(def.id)}>
-          ＋ set
+          <Icon name="plus" size={14} /> set
         </button>
         {sets.length > 1 ? (
           <button className="chip" onClick={() => store.removeSet(def.id, sets.length - 1)}>
-            − set
+            <Icon name="minus" size={14} /> set
           </button>
         ) : null}
         {tip ? (
@@ -188,10 +189,14 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
               else store.patchSet(def.id, 0, { weight: parseFloat(tip) })
             }}
           >
-            ↑ try {tip}
+            <Icon name="arrowUp" size={14} /> try {tip}
           </button>
         ) : null}
-        {hitPR ? <span className="chip pr">🏆 new best</span> : null}
+        {hitPR ? (
+          <span className="chip pr">
+            <Icon name="trophy" size={14} /> new best
+          </span>
+        ) : null}
         {!def.note ? (
           <button
             className="chip"
@@ -200,7 +205,7 @@ export function ExerciseCard({ def, sets, prev, members, extra, onLogged }: Prop
               setEditingNote(true)
             }}
           >
-            ＋ note
+            <Icon name="plus" size={14} /> note
           </button>
         ) : null}
         {extra ? (

@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { DayPreview } from './components/DayPreview'
 import { Home } from './components/Home'
 import { HistoryView } from './components/HistoryView'
+import { Icon, type IconName } from './components/Icon'
 import { ProgressView } from './components/ProgressView'
 import { RestBar } from './components/RestBar'
 import { SessionView } from './components/SessionView'
@@ -11,11 +13,11 @@ import type { DayId } from './lib/types'
 
 type Tab = 'home' | 'history' | 'progress' | 'settings'
 
-const TABS: { id: Tab; glyph: string; label: string }[] = [
-  { id: 'home', glyph: '🏋️', label: 'Train' },
-  { id: 'history', glyph: '📅', label: 'History' },
-  { id: 'progress', glyph: '📈', label: 'Progress' },
-  { id: 'settings', glyph: '⚙️', label: 'Settings' },
+const TABS: { id: Tab; icon: IconName; label: string }[] = [
+  { id: 'home', icon: 'dumbbell', label: 'Train' },
+  { id: 'history', icon: 'calendar', label: 'History' },
+  { id: 'progress', icon: 'trending', label: 'Progress' },
+  { id: 'settings', icon: 'settings', label: 'Settings' },
 ]
 
 const TITLES: Record<Tab, string> = {
@@ -25,24 +27,35 @@ const TITLES: Record<Tab, string> = {
   settings: 'Settings',
 }
 
+/** home -> preview -> session. Back always pops exactly one level. */
+type View = 'tabs' | 'preview' | 'session'
+
 export function App() {
   const store = useStore()
   const rest = useRestTimer(store.state.prefs)
   const [tab, setTab] = useState<Tab>('home')
-  const [inSession, setInSession] = useState(false)
+  const [view, setView] = useState<View>('tabs')
+  const [day, setDay] = useState<DayId>('push')
 
-  function start(day: DayId) {
-    if (store.state.active && store.state.active.day !== day) {
-      if (!confirm(`A ${store.state.active.day} workout is still open. Start ${day} instead?`)) return
-    }
-    if (!store.state.active || store.state.active.day !== day) store.startSession(day)
-    setInSession(true)
-  }
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+  })
 
-  if (inSession && store.state.active) {
+  if (view === 'session' && store.state.active) {
     return (
       <>
-        <SessionView rest={rest} onExit={() => setInSession(false)} />
+        <SessionView rest={rest} onExit={() => setView('preview')} />
+        <RestBar rest={rest} />
+      </>
+    )
+  }
+
+  if (view === 'preview') {
+    return (
+      <>
+        <DayPreview day={day} onBack={() => setView('tabs')} onEnterSession={() => setView('session')} />
         <RestBar rest={rest} />
       </>
     )
@@ -51,10 +64,24 @@ export function App() {
   return (
     <div className="app">
       <header className="top">
-        <h1>{TITLES[tab]}</h1>
+        <div className="top__titles">
+          {tab === 'home' ? <span className="eyebrow">{today}</span> : null}
+          <h1>{TITLES[tab]}</h1>
+        </div>
       </header>
 
-      {tab === 'home' ? <Home onStart={start} onResume={() => setInSession(true)} /> : null}
+      {tab === 'home' ? (
+        <Home
+          onOpenDay={(d) => {
+            setDay(d)
+            setView('preview')
+          }}
+          onResume={() => {
+            if (store.state.active) setDay(store.state.active.day)
+            setView('session')
+          }}
+        />
+      ) : null}
       {tab === 'history' ? <HistoryView /> : null}
       {tab === 'progress' ? <ProgressView /> : null}
       {tab === 'settings' ? <SettingsView /> : null}
@@ -63,8 +90,13 @@ export function App() {
 
       <nav className="tabbar">
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
-            <span className="glyph">{t.glyph}</span>
+          <button
+            key={t.id}
+            className={tab === t.id ? 'on' : ''}
+            aria-current={tab === t.id ? 'page' : undefined}
+            onClick={() => setTab(t.id)}
+          >
+            <Icon name={t.icon} size={22} />
             {t.label}
           </button>
         ))}

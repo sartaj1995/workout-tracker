@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { formatClock, formatSets } from '../lib/calc'
+import { formatClock, formatSets, plural } from '../lib/calc'
 import { resolveDay } from '../lib/plan'
 import { useStore } from '../lib/state'
+import { DAY_COLOR } from '../lib/theme'
 import type { RestTimer } from '../lib/useRestTimer'
 import { DAYS } from '../data/parse'
 import { ExerciseCard } from './ExerciseCard'
+import { Icon } from './Icon'
 import { Sheet } from './ui'
 
 export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => void }) {
@@ -28,17 +30,17 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
   const loggedSets = session.entries.reduce((n, e) => n + e.sets.filter((s) => s.done).length, 0)
 
   return (
-    <div className="app">
+    <div className="app" style={{ '--dc': DAY_COLOR[session.day] } as React.CSSProperties}>
       <header className="top">
-        <button className="icon-btn" onClick={onExit} aria-label="Back">
-          ←
+        <button className="icon-btn" onClick={onExit} aria-label="Back — the workout stays open">
+          <Icon name="arrowLeft" />
         </button>
-        <h1>
-          {day?.label} day
-          <span className="sub">
-            {formatClock(elapsed)} elapsed · {loggedSets} sets logged
+        <div className="top__titles">
+          <h1>{day?.label}</h1>
+          <span className="eyebrow">
+            {formatClock(elapsed)} elapsed · {plural(loggedSets, 'set')} logged
           </span>
-        </h1>
+        </div>
       </header>
 
       <div className="screen" style={{ paddingBottom: 'calc(150px + var(--safe-b))' }}>
@@ -63,18 +65,15 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
 
         {extras.length ? (
           <button className="btn block ghost" onClick={() => setShowExtras(true)}>
-            ＋ Extra work ({extras.length} available)
+            <Icon name="plus" size={17} /> Extra work · {extras.length} available
           </button>
         ) : null}
       </div>
 
       <div className="actionbar">
         <div className="inner">
-          <button className="btn ghost danger" onClick={onExit}>
-            Pause
-          </button>
-          <button className="btn success" style={{ flex: 2 }} onClick={() => setConfirmFinish(true)}>
-            Finish workout
+          <button className="btn success lg block" onClick={() => setConfirmFinish(true)}>
+            <Icon name="check" size={18} /> Finish workout
           </button>
         </div>
       </div>
@@ -113,7 +112,7 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
       {confirmFinish ? (
         <Sheet title="Finish workout?" onClose={() => setConfirmFinish(false)}>
           <p className="small muted" style={{ marginTop: 0 }}>
-            {loggedSets} sets logged. Unchecked sets are dropped, and today's numbers become the
+{plural(loggedSets, 'set')} logged. Unchecked sets are dropped, and today's numbers become the
             starting point for next time.
           </p>
           <div className="row" style={{ marginTop: 6 }}>

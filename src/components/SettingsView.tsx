@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { plateBreakdown } from '../lib/calc'
 import { useStore } from '../lib/state'
 import { downloadBackup, freshState, readBackup } from '../lib/storage'
+import { Icon } from './Icon'
 import { NumberField, Toggle } from './ui'
 
 export function SettingsView() {
@@ -134,10 +135,10 @@ export function SettingsView() {
           wipes it.
         </p>
         <button className="btn block" onClick={() => downloadBackup(store.state)}>
-          ⬇ Export backup
+          <Icon name="download" size={17} /> Export backup
         </button>
         <button className="btn block" style={{ marginTop: 8 }} onClick={() => fileRef.current?.click()}>
-          ⬆ Import backup
+          <Icon name="upload" size={17} /> Import backup
         </button>
         <input
           ref={fileRef}
@@ -164,7 +165,7 @@ export function SettingsView() {
             setStatus('Reloaded exercises from notes. Your logged sets are untouched.')
           }}
         >
-          ↻ Reload exercises from notes
+          <Icon name="refresh" size={17} /> Reload exercises from notes
         </button>
         <button
           className="btn block danger"
@@ -176,7 +177,7 @@ export function SettingsView() {
             }
           }}
         >
-          Erase all data
+          <Icon name="trash" size={17} /> Erase all data
         </button>
         {status ? (
           <p className="small" style={{ color: 'var(--success)' }}>
