@@ -1,7 +1,11 @@
 // Keeps the app usable with no signal in the gym. Assets are content-hashed by
 // Vite, so caching them forever is safe; the HTML shell is refreshed when
 // online and served from cache when not.
-const CACHE = 'workout-v1'
+const CACHE = 'workout-v2'
+
+// Fonts are the only cross-origin assets; cache them so the app keeps its
+// typography offline instead of falling back mid-workout.
+const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com']
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -19,7 +23,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return
+  if (request.method !== 'GET') return
+  const url = new URL(request.url)
+  const sameOrigin = url.origin === self.location.origin
+  if (!sameOrigin && !FONT_HOSTS.includes(url.hostname)) return
 
   if (request.mode === 'navigate') {
     event.respondWith(
