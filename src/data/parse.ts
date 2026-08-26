@@ -5,6 +5,7 @@ export const DAYS: { id: DayId; label: string }[] = [
   { id: 'push', label: 'Push' },
   { id: 'pull', label: 'Pull' },
   { id: 'legs', label: 'Legs' },
+  { id: 'upper', label: 'Upper' },
 ]
 
 export function slugify(name: string): string {

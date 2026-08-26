@@ -34,6 +34,9 @@ export function DayPreview({
   const activeHere = active?.day === day
   const activeElsewhere = active && active.day !== day
   const otherLabel = DAYS.find((d) => d.id === active?.day)?.label
+  // A day whose heading exists in the notes but has nothing under it yet.
+  const empty = core.length === 0 && extras.length === 0
+  const bottomPad = empty ? undefined : 'calc(120px + var(--safe-b))'
 
   function start() {
     store.startSession(day)
@@ -49,14 +52,14 @@ export function DayPreview({
         <div className="top__titles">
           <h1>{meta?.label}</h1>
           <span className="eyebrow">
-            {plural(core.length, 'exercise')}
-            {extras.length ? ` · ${extras.length} extra` : ''}
-            {last ? ` · last ${relativeDay(last.startedAt)}` : ''}
+            {empty ? 'Not set up yet' : plural(core.length, 'exercise')}
+            {!empty && extras.length ? ` · ${extras.length} extra` : ''}
+            {!empty && last ? ` · last ${relativeDay(last.startedAt)}` : ''}
           </span>
         </div>
       </header>
 
-      <div className="screen" style={{ paddingBottom: 'calc(120px + var(--safe-b))' }}>
+      <div className="screen" style={{ paddingBottom: bottomPad }}>
         {activeHere ? (
           <div className="banner" style={{ color: 'var(--success)', borderColor: 'var(--success)' }}>
             <Icon name="timer" size={16} />
@@ -73,44 +76,54 @@ export function DayPreview({
           </div>
         ) : null}
 
-        <p className="section-title">The session</p>
-        <div className="list-card">
-          {core.map((def, i) => {
-            const members = def.choiceId
-              ? store.state.catalog.filter((d) => d.choiceId === def.choiceId)
-              : []
-            const prev = store.state.seeds[def.id] ?? []
-            return (
-              <div className="preview-item" key={def.id}>
-                <span className="preview-item__num">{i + 1}</span>
-                <span className="preview-item__body">
-                  <span className="preview-item__name">{def.name}</span>
-                  <span className="preview-item__sets">
-                    {prev.length ? formatSets(prev, def) : 'No history yet'}
-                  </span>
-                  {members.length > 1 ? (
-                    <span className="preview-item__alt">
-                      or{' '}
-                      {members
-                        .filter((m) => m.id !== def.id)
-                        .map((m, j, arr) => (
-                          <span key={m.id}>
-                            <button
-                              className="linkish"
-                              onClick={() => store.swapChoice(def.choiceId!, m.id)}
-                            >
-                              {m.name}
-                            </button>
-                            {j < arr.length - 1 ? ' · ' : ''}
-                          </span>
-                        ))}
+        {empty ? (
+          <p className="empty">
+            Nothing here yet. Add your {meta?.label.toLowerCase()} exercises under the{' '}
+            <strong>{meta?.label}</strong> heading in <code>src/data/notes.ts</code>, redeploy, and
+            they'll show up — same format as the other days.
+          </p>
+        ) : null}
+
+        {empty ? null : <p className="section-title">The session</p>}
+        {empty ? null : (
+          <div className="list-card">
+            {core.map((def, i) => {
+              const members = def.choiceId
+                ? store.state.catalog.filter((d) => d.choiceId === def.choiceId)
+                : []
+              const prev = store.state.seeds[def.id] ?? []
+              return (
+                <div className="preview-item" key={def.id}>
+                  <span className="preview-item__num">{i + 1}</span>
+                  <span className="preview-item__body">
+                    <span className="preview-item__name">{def.name}</span>
+                    <span className="preview-item__sets">
+                      {prev.length ? formatSets(prev, def) : 'No history yet'}
                     </span>
-                  ) : null}
-                </span>
-              </div>
-            )
-          })}
-        </div>
+                    {members.length > 1 ? (
+                      <span className="preview-item__alt">
+                        or{' '}
+                        {members
+                          .filter((m) => m.id !== def.id)
+                          .map((m, j, arr) => (
+                            <span key={m.id}>
+                              <button
+                                className="linkish"
+                                onClick={() => store.swapChoice(def.choiceId!, m.id)}
+                              >
+                                {m.name}
+                              </button>
+                              {j < arr.length - 1 ? ' · ' : ''}
+                            </span>
+                          ))}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         {extras.length ? (
           <>
@@ -140,22 +153,24 @@ export function DayPreview({
         ) : null}
       </div>
 
-      <div className="actionbar">
-        <div className="inner">
-          {activeHere ? (
-            <button className="btn success lg block" onClick={onEnterSession}>
-              <Icon name="play" size={18} filled /> Resume workout
-            </button>
-          ) : (
-            <button
-              className="btn primary lg block"
-              onClick={() => (activeElsewhere ? setConfirmSwitch(true) : start())}
-            >
-              <Icon name="play" size={18} filled /> Start workout
-            </button>
-          )}
+      {empty ? null : (
+        <div className="actionbar">
+          <div className="inner">
+            {activeHere ? (
+              <button className="btn success lg block" onClick={onEnterSession}>
+                <Icon name="play" size={18} filled /> Resume workout
+              </button>
+            ) : (
+              <button
+                className="btn primary lg block"
+                onClick={() => (activeElsewhere ? setConfirmSwitch(true) : start())}
+              >
+                <Icon name="play" size={18} filled /> Start workout
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {confirmSwitch ? (
         <Sheet title={`Discard the ${otherLabel} workout?`} onClose={() => setConfirmSwitch(false)}>

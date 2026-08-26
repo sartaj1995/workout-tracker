@@ -1,4 +1,4 @@
-export type DayId = 'push' | 'pull' | 'legs'
+export type DayId = 'push' | 'pull' | 'legs' | 'upper'
 
 /** How a set is measured. Drives which input fields the UI shows. */
 export type Metric =

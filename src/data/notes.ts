@@ -2,12 +2,15 @@
  * Your gym notes, kept in the exact shape you already write them in.
  *
  * Format:
- *   Push / Pull / Legs        day heading
+ *   Push / Pull / Legs / Upper  day heading
  *   Name - 80x9 75x8 ...      one exercise; "weight x reps", space separated
  *   70x8+55x3+45x3            a "+" chains drop sets onto the same set
  *   OR                        links the exercise above and below as a choice
  *   (blank line)              everything after it in that day is optional/extra
  *   ... (some note)           trailing parentheses become the exercise note
+ *
+ * A heading with nothing under it is a day you haven't filled in yet; the app
+ * shows it as empty rather than letting you start it.
  *
  * Edit this and the app updates. Use "Reload from notes" in Settings.
  */
@@ -58,10 +61,14 @@ Deadlift - 20x15 25x12 30x10 35x8
 
 Legs
 Leg press - 120x12 120x9 110x10 100x12 (start from 130)
+OR
+Bulgarian split squats - 20x7 15x8 15x7 15x6
 Leg extension - 102.5x10 102.5x10 102.5x10 102.5x10+82.5x2
 Hamstring curls - 75x10 70x10 65x11 65x10
 Adductor - 85x10 80x9 75x9 70x10
 Wall sit - 110s
+
+Upper
 `
 
 /**

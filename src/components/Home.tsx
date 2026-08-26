@@ -14,8 +14,10 @@ export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void;
 
   const lastOf = (day: DayId) => sessions.find((s) => s.day === day)
 
-  // Whichever day you've left longest is the one the app leads with.
-  const due = [...DAYS].sort((a, b) => (lastOf(a.id)?.startedAt ?? 0) - (lastOf(b.id)?.startedAt ?? 0))[0]
+  // Whichever day you've left longest is the one the app leads with. A day with
+  // no exercises yet is never "due" — it has nothing to train.
+  const ready = DAYS.filter((d) => resolveDay(store.state, d.id, false).length > 0)
+  const due = [...ready].sort((a, b) => (lastOf(a.id)?.startedAt ?? 0) - (lastOf(b.id)?.startedAt ?? 0))[0]
   const showNext = sessions.length > 0 && !active
 
   const thisWeek = sessions.filter((s) => s.startedAt > Date.now() - 7 * 86400000).length
@@ -55,7 +57,8 @@ export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void;
           const last = lastOf(d.id)
           const count = resolveDay(store.state, d.id, false).length
           const extras = resolveDay(store.state, d.id, true).length
-          const isNext = showNext && due.id === d.id
+          const isNext = showNext && due?.id === d.id
+          const empty = count === 0 && extras === 0
           return (
             <button
               key={d.id}
@@ -72,11 +75,15 @@ export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void;
                 ) : null}
                 <span className="day-card__name">{d.label}</span>
                 <span className="day-card__meta">
-                  {plural(count, 'exercise')}
-                  {extras ? ` · ${extras} extra` : ''}
+                  {empty ? 'Not set up yet' : plural(count, 'exercise')}
+                  {!empty && extras ? ` · ${extras} extra` : ''}
                 </span>
                 <span className="day-card__last">
-                  {last ? `Last trained ${relativeDay(last.startedAt)}` : 'Not trained yet'}
+                  {empty
+                    ? 'Add exercises to your notes'
+                    : last
+                      ? `Last trained ${relativeDay(last.startedAt)}`
+                      : 'Not trained yet'}
                 </span>
               </span>
               <span className="day-card__go">

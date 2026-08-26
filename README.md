@@ -53,7 +53,7 @@ Dumbbell press - 30x10 25x11 25x10 25x9
 
 | Syntax | Meaning |
 | --- | --- |
-| `Push` / `Pull` / `Legs` | Day heading |
+| `Push` / `Pull` / `Legs` / `Upper` | Day heading |
 | `Name - 80x9 75x8` | Exercise, then `weight x reps` per set |
 | `70x8+55x3` | `+` chains drop sets onto the same set |
 | `OR` between two lines | Makes them alternatives you pick between |
@@ -72,6 +72,10 @@ alone either way.
 Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
+
+A heading with nothing under it is a day you haven't filled in yet. It shows on
+the home screen as *Not set up yet* and can't be started — `Upper` ships that
+way, ready for exercises.
 
 Whichever side of an `OR` pair is listed **first** is the one offered by
 default. Because the notes decide that, editing them clears any choice you'd
