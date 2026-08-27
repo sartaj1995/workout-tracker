@@ -75,11 +75,23 @@ export function useRestTimer(prefs: Prefs): RestTimer {
     [prefs.restSeconds, prefs.soundOn],
   )
 
-  const extend = useCallback((seconds: number) => {
-    fired.current = false
-    setTotal((t) => t + seconds)
-    setEndAt((e) => (e === null ? null : e + seconds * 1000))
-  }, [])
+  /** Positive adds rest, negative takes it away. Never runs past zero. */
+  const extend = useCallback(
+    (seconds: number) => {
+      if (endAt === null) return
+      const next = Math.max(Date.now(), endAt + seconds * 1000)
+      if (seconds > 0) {
+        // More rest means a fresh alert is due when it runs out.
+        fired.current = false
+      } else if (next <= Date.now()) {
+        // Cutting rest short to zero shouldn't beep — you're looking at it.
+        fired.current = true
+      }
+      setEndAt(next)
+      setTotal((t) => Math.max(1, t + seconds))
+    },
+    [endAt],
+  )
 
   const stop = useCallback(() => setEndAt(null), [])
 
