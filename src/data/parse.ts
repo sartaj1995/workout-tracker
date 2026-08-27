@@ -1,11 +1,16 @@
 import type { DayId, DayPlanEntry, ExerciseDef, Metric, Unit, WorkSet } from '../lib/types'
 import { OVERRIDES, RAW_NOTES } from './notes'
 
-export const DAYS: { id: DayId; label: string }[] = [
-  { id: 'push', label: 'Push' },
-  { id: 'pull', label: 'Pull' },
-  { id: 'legs', label: 'Legs' },
-  { id: 'upper', label: 'Upper' },
+/**
+ * `rotation: false` marks a day you reach for *instead of* a rotation day when
+ * time is short. It never claims the "up next" slot, and leaving it alone never
+ * makes it overdue.
+ */
+export const DAYS: { id: DayId; label: string; rotation: boolean }[] = [
+  { id: 'push', label: 'Push', rotation: true },
+  { id: 'pull', label: 'Pull', rotation: true },
+  { id: 'legs', label: 'Legs', rotation: true },
+  { id: 'upper', label: 'Upper', rotation: false },
 ]
 
 export function slugify(name: string): string {

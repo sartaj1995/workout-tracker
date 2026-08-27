@@ -74,6 +74,12 @@ Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
 
+`Upper` is marked as a substitute rather than part of the rotation (the
+`rotation` flag on `DAYS` in [`src/data/parse.ts`](src/data/parse.ts)). It sits
+under *Short on time* on the home screen, never claims the **Up next** badge,
+and training it doesn't change which rotation day comes next — swapping it in
+for a Push day leaves Push just as overdue as it was.
+
 A day can reuse an exercise from an earlier day by listing its name on its own,
 with no sets — that's how `Upper` is built out of Push and Pull lifts. It's the
 **same exercise**, not a copy: one history, one progress chart, and it brings
