@@ -1,159 +1,185 @@
+<div align="center">
+
+<img src="public/icon-512.png" width="96" alt="Workout Tracker icon">
+
 # Workout Tracker
 
-A mobile-first push / pull / legs logger. Your gym notes, turned into an app you
-can add to your phone's home screen and use with no signal.
+**Your gym notes, turned into an app you keep on your home screen.**
 
-- **Pick a day** — Push, Pull or Legs — and every exercise appears with last
-  session's weights and reps as ghost numbers. Tap ✓ to accept them, or type over
-  the ones that changed.
-- **This-or-that** exercises (Chest press *or* Dumbbell press) are a row of
-  chips at the top of the card. Each variant keeps its own history.
-- **Extra work** sits behind one button at the bottom of the session, along
-  with anything you skipped today.
-- **Skip an exercise** you don't feel like doing and it disappears from the
-  session — tap *skip today* on its card. It stays in your plan, and adding it
-  back drops it into its original position.
-- **Drop sets** are first-class: `70x8+55x3+45x3` round-trips exactly.
-- **Rest timer** starts on its own each time you check a set off, then beeps and
-  vibrates. The alert is handed to the audio clock when rest *starts*, not
-  played when a timer notices zero — a backgrounded page has its timers
-  throttled to the point of never firing. The screen is also held awake while a
-  workout is open, which is the real reason an alert gets missed.
-- **Notes** per exercise for seat height, pin position, or what to try next.
-- **Progress** charts estimated 1RM per exercise; **History** shows every saved
-  session and an 8-week training grid.
+Push / Pull / Legs sessions that open with last time's weights already filled in.
+No account, no server, no signal required.
 
-Everything is stored in the browser on your phone. No account, no server, no
-network needed after the first load.
+<a href="https://workout-tracker-ssd.vercel.app/"><img src="https://img.shields.io/badge/Try_it_live-0b0f14?style=for-the-badge&logo=vercel&logoColor=white" alt="Try it live"></a>
+<a href="#make-it-yours"><img src="https://img.shields.io/badge/Make_it_yours-1f6feb?style=for-the-badge&logoColor=white" alt="Make it yours"></a>
 
-## Run it
+<br>
+
+![React 19](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-offline_first-5a0fc8?style=flat-square)
+![Backend](https://img.shields.io/badge/backend-none-2ea043?style=flat-square)
+![Vibe coded](https://img.shields.io/badge/vibe_coded-with_Claude_Code-d97757?style=flat-square)
+
+<br>
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/home.png" alt="Home screen showing Push, Pull and Legs cards with an Up next badge and this week's training grid"></td>
+<td width="33%"><img src="docs/screenshots/session.png" alt="A Push session with last time's weights pre-filled as ghost numbers"></td>
+<td width="33%"><img src="docs/screenshots/progress.png" alt="Estimated 1RM charted over two months for dumbbell press"></td>
+</tr>
+<tr>
+<td align="center"><sub><b>Pick a day.</b> The overdue one is badged.</sub></td>
+<td align="center"><sub><b>Last time is already in the boxes.</b></sub></td>
+<td align="center"><sub><b>Estimated 1RM, per exercise.</b></sub></td>
+</tr>
+</table>
+
+</div>
+
+---
+
+## The whole idea
+
+Most tracker apps make you *look up* what you lifted last time. This one puts it
+in the box before you get there.
+
+> You tap **Push**. Every exercise is already showing `85x9  80x8  75x8` in grey —
+> exactly what you did last Push day. Hit ✓ on the ones you repeated, type over
+> the ones that moved. A rest timer starts itself. You never search for anything.
+
+Your sessions live in your phone's own storage. It opens in the basement gym
+with no bars of signal, because after the first load it doesn't need the network
+at all.
+
+---
+
+## What's in it
+
+|  | |
+| --- | --- |
+| ⚡ **Last time, pre-filled** | Every set opens with the previous session's weight and reps as ghost numbers. One tap accepts them. |
+| 🔀 **This-or-that exercises** | *Chest press* **or** *Dumbbell press* is a row of chips on one card. Each side keeps its own history and its own chart. |
+| 🪜 **Drop sets, properly** | `70x8+55x3+45x3` is one set with three drops, and it round-trips exactly as written. |
+| ⏱️ **Rest timer that starts itself** | Kicks off the moment you check a set off, then beeps and buzzes — reliably, even with the phone in your pocket. −15s / +15s if you need it. |
+| 🙈 **Skip today** | Not feeling an exercise? It leaves the session but stays in your plan, and comes back in its original slot. |
+| 📝 **Notes per exercise** | Seat height, pin position, what to try next week. |
+| 📈 **Progress & history** | Estimated 1RM charted per exercise, every saved session, and an 8-week training grid. |
+| ☁️ **Optional Drive backup** | Your data, in your own Google Drive, in a folder only this app can see. Off by default. |
+
+<div align="center">
+<img src="docs/screenshots/history.png" width="280" alt="History screen with an eight-week training grid and a list of past sessions">
+<br>
+<sub>Eight weeks at a glance, then every session underneath it.</sub>
+</div>
+
+---
+
+## Make it yours
+
+The live demo above runs on one person's routine. The app has no sign-up because
+it has no server, so "using it" means running your own copy with your own
+exercises in it. That takes about five minutes and costs nothing.
+
+**1. Grab the code**
 
 ```bash
+git clone https://github.com/sartaj1995/workout-tracker.git
+cd workout-tracker
 npm install
 npm run dev
 ```
 
-## Deploy to Vercel
+**2. Paste in your own workout**
 
-Push this repo to GitHub, then import it at [vercel.com/new](https://vercel.com/new).
-Vercel detects Vite on its own — framework preset **Vite**, build command
-`npm run build`, output directory `dist`. No environment variables.
-
-Open the deployed URL on your phone and use **Add to Home Screen**. It then runs
-full screen with no browser chrome and works offline.
-
-## Editing your exercises
-
-Everything comes from [`src/data/notes.ts`](src/data/notes.ts), which holds your
-notes in the exact shape you already write them:
+Open [`src/data/notes.ts`](src/data/notes.ts) and replace what's there with your
+routine, written the way you'd scribble it in a notes app:
 
 ```
 Push
 Chest press (sitting) - 85x9 80x8 75x8 70x8+55x3+45x3
 OR
 Dumbbell press - 30x10 25x11 25x10 25x9
+Lateral raise - 25x7 22.5x9 22.5x8
+
+Cable crunch - 40x15 40x12
 ```
 
-| Syntax | Meaning |
+| You write | It means |
 | --- | --- |
-| `Push` / `Pull` / `Legs` / `Upper` | Day heading |
-| `Name - 80x9 75x8` | Exercise, then `weight x reps` per set |
-| `70x8+55x3` | `+` chains drop sets onto the same set |
-| `OR` between two lines | Makes them alternatives you pick between |
-| A blank line inside a day | Everything below it is optional/extra |
-| `... (note)` after the sets | Becomes the exercise note |
-| A bare name, no ` - ` | Reuses an exercise from an earlier day |
+| `Push` / `Pull` / `Legs` / `Upper` | A day heading |
+| `Name - 80x9 75x8` | An exercise, then `weight x reps` for each set |
+| `70x8+55x3` | `+` chains drop sets onto one set |
+| `OR` between two lines | The two are alternatives you pick between |
+| A blank line inside a day | Everything under it is optional / extra work |
+| `... (note)` after the sets | Becomes that exercise's note |
+| A bare name with no ` - ` | Reuses an exercise from an earlier day — same history |
 
-Machines numbered by plate rather than kilos, and lifts measured in reps or
-seconds instead of weight, are listed in `OVERRIDES` at the bottom of the same
-file.
+Those starting numbers are just seeds; the app takes over from your first logged
+session. Machines numbered by plate, and lifts counted in reps or seconds
+instead of kilos, go in `OVERRIDES` at the bottom of the same file — the
+[manual](docs/MANUAL.md#writing-your-notes) has the full reference.
 
-Edit, redeploy, and the app picks the changes up on its own — it fingerprints
-the notes and rebuilds the catalog when they differ. (**Settings → Reload
-exercises from notes** forces the same thing.) Everything you've logged is left
-alone either way.
+**3. Put it online and on your phone**
 
-Removing an exercise from the notes *retires* it rather than deleting it: it
-stops being offered in new workouts, but past sessions and its progress chart
-still render.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/sartaj1995/workout-tracker)
 
-`Upper` is marked as a substitute rather than part of the rotation (the
-`rotation` flag on `DAYS` in [`src/data/parse.ts`](src/data/parse.ts)). It sits
-under *Short on time* on the home screen, never claims the **Up next** badge,
-and training it doesn't change which rotation day comes next — swapping it in
-for a Push day leaves Push just as overdue as it was.
+Vercel detects Vite by itself — preset **Vite**, build `npm run build`, output
+`dist`, no environment variables. Open the URL on your phone and use **Add to
+Home Screen**. It then runs full screen with no browser chrome, and works with
+airplane mode on.
 
-A day can reuse an exercise from an earlier day by listing its name on its own,
-with no sets — that's how `Upper` is built out of Push and Pull lifts. It's the
-**same exercise**, not a copy: one history, one progress chart, and it brings
-its `OR` alternatives with it. Which side of a pair you're using is remembered
-per day, though — dumbbells on Push and the machine on Upper is fine, and
-switching one doesn't disturb the other.
+Edit your notes later and redeploy; the app fingerprints them, notices the change
+and rebuilds its exercise list on its own. Everything you've logged is left
+untouched. Delete an exercise and it's *retired*, not erased — it stops being
+offered, but its past sessions and chart still render.
 
-A heading with nothing under it is a day you haven't filled in yet. It shows on
-the home screen as *Not set up yet* and can't be started — `Upper` ships that
-way, ready for exercises.
+---
 
-Whichever side of an `OR` pair is listed **first** is the one offered by
-default. Because the notes decide that, editing them clears any choice you'd
-swapped to inside the app — otherwise an old in-app pick would quietly override
-the order you just wrote.
+## Vibe coded, on purpose
 
-## Backups
+Every line of this app was written by [Claude Code](https://claude.com/claude-code).
+Not scaffolded by it, not autocompleted by it — written by it, across 11 pull
+requests in two days, from one person describing what they wanted in the gym
+and what annoyed them about the last version.
 
-Data lives in `localStorage`, so clearing your browser data erases it.
-**Settings → Export backup** writes a JSON file; **Import backup** restores it.
+The human contribution was the taste. This app exists because every workout
+tracker on the store wanted an account and a subscription to do something a
+paper notebook already does better. So the prompts were things like *"the
+numbers should already be there"* and *"a fresh phone must never overwrite the
+backup"* — decisions about behaviour, not instructions about code.
 
-### Google Drive
+It's an honest look at where that gets you: roughly 3,400 lines of
+TypeScript with two runtime dependencies (React and React DOM), no component
+library, no state library, no test suite, and a hand-rolled service worker. It's
+also unapologetically single-user software — built for one routine, one phone,
+one person. That's exactly why it's pleasant to use, and exactly why you should
+fork it rather than sign up for it.
 
-Better: connect Google Drive in Settings and it keeps one backup file in your
-own Drive, re-uploaded automatically after every workout you save. Free, no
-server, and the same file restores onto a laptop.
+**If you want your own version of this**, that's the whole method: open Claude
+Code in an empty folder, describe the app the way you'd describe it to a friend,
+then keep using the thing and complaining about it until it's right.
 
-It uses the [`drive.file`](https://developers.google.com/identity/protocols/oauth2/scopes)
-scope, which reaches only files the app itself created — Google classes that as
-non-sensitive, so there's no verification and no "unverified app" warning, and
-none of your other Drive files are visible to it.
+---
 
-Setup is once, about fifteen minutes:
+## Going further
 
-1. In [Google Cloud Console](https://console.cloud.google.com), create a project.
-2. **APIs & Services → Library**, search *Google Drive API*, **Enable**.
-3. **OAuth consent screen** → **External**. Fill in app name and your email.
-4. **Publish** the app rather than leaving it in Testing. `drive.file` is
-   non-sensitive so publishing needs no review, and Testing mode expires your
-   sign-in every 7 days.
-5. **Credentials → Create credentials → OAuth client ID → Web application**.
-   Under *Authorised JavaScript origins* add your deployed URL, and
-   `http://localhost:5173` if you run it locally. Leave redirect URIs empty —
-   this flow doesn't use them.
-6. Copy the client ID.
-7. In Vercel, **Settings → Environment Variables**, add
-   `VITE_GOOGLE_CLIENT_ID` with that value, then **redeploy**. Vite bakes env
-   vars in at build time, so a redeploy is required.
+Two things live in the [manual](docs/MANUAL.md) rather than here, because you
+don't need them to start:
 
-The client ID is public — it ends up in the JavaScript bundle by design, and is
-not a secret. Without it the Drive section just says it isn't configured.
+- **[Backing up to Google Drive](docs/MANUAL.md#backing-up-to-google-drive)** —
+  optional and off by default. One backup file in your own Drive, re-uploaded
+  after every workout you save, using a scope that can't see any of your other
+  files. About fifteen minutes to set up. Until then, **Settings → Export
+  backup** writes a JSON file whenever you want one.
+- **[How it's built](docs/MANUAL.md#design-decisions)** — the project layout and
+  the handful of decisions that explain the odd behaviours: substitute days that
+  don't advance the rotation, one exercise shared across two days, and why
+  editing your notes resets an in-app choice.
 
-**Conflicts:** a backup never overwrites a copy this device hasn't seen. If you
-log on two devices, Settings says so and lets you choose which one wins rather
-than silently picking.
+---
 
-## Layout
-
-```
-src/
-  data/notes.ts      your notes, verbatim
-  data/parse.ts      notes -> exercise catalog
-  lib/types.ts       data model
-  lib/calc.ts        1RM, volume, plate maths, progression hints
-  lib/state.tsx      app state + localStorage persistence
-  lib/storage.ts     load/save/export/import
-  lib/useRestTimer.ts
-  lib/useWakeLock.ts
-  lib/drive.ts       Google Drive auth + REST calls
-  lib/sync.ts        backup/restore orchestration and conflict handling
-  components/        screens and the exercise card
-public/sw.js         offline cache
-scripts/make-icons.mjs  regenerates the PWA icons (npm run icons)
-```
+<div align="center">
+<sub>Built for one gym routine. Fork it and make it yours.</sub>
+</div>
