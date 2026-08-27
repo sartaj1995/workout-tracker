@@ -63,6 +63,8 @@ export interface Prefs {
   plates: number[]
   soundOn: boolean
   vibrateOn: boolean
+  /** Hold the screen awake while a workout is running. */
+  keepScreenOn: boolean
   /** Smallest weight jump you can actually make, in kg. */
   weightStep: number
   /** Hit this many reps on a set and the app suggests adding weight. */

@@ -15,7 +15,10 @@ can add to your phone's home screen and use with no signal.
   back drops it into its original position.
 - **Drop sets** are first-class: `70x8+55x3+45x3` round-trips exactly.
 - **Rest timer** starts on its own each time you check a set off, then beeps and
-  vibrates.
+  vibrates. The alert is handed to the audio clock when rest *starts*, not
+  played when a timer notices zero — a backgrounded page has its timers
+  throttled to the point of never firing. The screen is also held awake while a
+  workout is open, which is the real reason an alert gets missed.
 - **Notes** per exercise for seat height, pin position, or what to try next.
 - **Progress** charts estimated 1RM per exercise; **History** shows every saved
   session and an 8-week training grid.
@@ -147,6 +150,7 @@ src/
   lib/state.tsx      app state + localStorage persistence
   lib/storage.ts     load/save/export/import
   lib/useRestTimer.ts
+  lib/useWakeLock.ts
   lib/drive.ts       Google Drive auth + REST calls
   lib/sync.ts        backup/restore orchestration and conflict handling
   components/        screens and the exercise card

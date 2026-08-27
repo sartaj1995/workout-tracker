@@ -6,7 +6,7 @@ import { DriveCard } from './DriveCard'
 import { Icon } from './Icon'
 import { NumberField, Toggle } from './ui'
 
-export function SettingsView() {
+export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
   const store = useStore()
   const { prefs } = store.state
   const fileRef = useRef<HTMLInputElement>(null)
@@ -40,6 +40,22 @@ export function SettingsView() {
           <label htmlFor="vib">Vibrate when rest ends</label>
           <Toggle on={prefs.vibrateOn} onChange={(v) => store.setPrefs({ vibrateOn: v })} />
         </div>
+        <div className="setting">
+          <label>
+            Keep screen on
+            <small>
+              While a workout is open. A locked screen is why an alert gets missed — the page
+              freezes and the sound never plays.
+            </small>
+          </label>
+          <Toggle on={prefs.keepScreenOn} onChange={(v) => store.setPrefs({ keepScreenOn: v })} />
+        </div>
+        <button className="btn block" style={{ marginTop: 4 }} onClick={onTestAlert}>
+          <Icon name="timer" size={17} /> Play the alert now
+        </button>
+        <p className="tiny muted" style={{ marginBottom: 0 }}>
+          Turn your volume up and check you'd hear this across a gym.
+        </p>
       </div>
 
       <div className="section-title">Progression</div>
