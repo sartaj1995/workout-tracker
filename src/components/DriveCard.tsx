@@ -43,7 +43,7 @@ export function DriveCard() {
     setBusy(null)
     setSync(loadSync())
     if (result.ok) setMessage('Backed up to Drive.')
-    else if (result.reason === 'conflict') setError('Drive has a newer copy from another device.')
+    else if (result.reason === 'conflict') setError(null)
     else setError(result.message)
   }
 
@@ -88,34 +88,41 @@ export function DriveCard() {
               <div className="banner">
                 <Icon name="alert" size={16} />
                 <span>
-                  Drive holds a copy this phone hasn't seen — probably logged on another device.
-                  Nothing has been overwritten. Pick which one to keep.
+                  {sync.conflictFirstConnect
+                    ? `Drive already has a backup from ${when(Date.parse(sync.conflictRemoteTime ?? ''))}, made on another device. Nothing has been overwritten — restore it here, or replace it with this device's data.`
+                    : `Drive holds a copy this device hasn't seen, from ${when(Date.parse(sync.conflictRemoteTime ?? ''))} — probably logged elsewhere. Nothing has been overwritten. Pick which one to keep.`}
                 </span>
               </div>
             ) : null}
 
-            <button
-              className="btn block"
-              disabled={busy !== null}
-              onClick={() => runBackup(sync.conflict === true, true)}
-            >
-              <Icon name="upload" size={17} />
-              {busy === 'backup'
-                ? 'Backing up…'
-                : sync.conflict
-                  ? "Overwrite Drive with this phone's copy"
-                  : 'Back up now'}
-            </button>
-
-            <button
-              className="btn block"
-              style={{ marginTop: 8 }}
-              disabled={busy !== null}
-              onClick={() => setConfirmRestore(true)}
-            >
-              <Icon name="download" size={17} />
-              {busy === 'restore' ? 'Restoring…' : 'Restore from Drive'}
-            </button>
+            {/* On a conflict the safe move is to pull, so it leads. */}
+            {(sync.conflict ? ['restore', 'backup'] : ['backup', 'restore']).map((action, i) => (
+              <div key={action} style={i > 0 ? { marginTop: 8 } : undefined}>
+                {action === 'restore' ? (
+                  <button
+                    className={`btn block${sync.conflict ? ' primary' : ''}`}
+                    disabled={busy !== null}
+                    onClick={() => setConfirmRestore(true)}
+                  >
+                    <Icon name="download" size={17} />
+                    {busy === 'restore' ? 'Restoring…' : 'Restore from Drive'}
+                  </button>
+                ) : (
+                  <button
+                    className="btn block"
+                    disabled={busy !== null}
+                    onClick={() => runBackup(sync.conflict === true, true)}
+                  >
+                    <Icon name="upload" size={17} />
+                    {busy === 'backup'
+                      ? 'Backing up…'
+                      : sync.conflict
+                        ? "Replace Drive with this device's data"
+                        : 'Back up now'}
+                  </button>
+                )}
+              </div>
+            ))}
 
             <button
               className="btn block ghost"
