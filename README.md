@@ -83,8 +83,9 @@ for a Push day leaves Push just as overdue as it was.
 A day can reuse an exercise from an earlier day by listing its name on its own,
 with no sets — that's how `Upper` is built out of Push and Pull lifts. It's the
 **same exercise**, not a copy: one history, one progress chart, and it brings
-its `OR` alternatives with it. Because the alternatives are shared too,
-switching a pair on one day switches it on the other.
+its `OR` alternatives with it. Which side of a pair you're using is remembered
+per day, though — dumbbells on Push and the machine on Upper is fine, and
+switching one doesn't disturb the other.
 
 A heading with nothing under it is a day you haven't filled in yet. It shows on
 the home screen as *Not set up yet* and can't be started — `Upper` ships that

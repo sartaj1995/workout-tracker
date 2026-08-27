@@ -1,6 +1,14 @@
 import type { AppState, DayId, ExerciseDef } from './types'
 
 /**
+ * Which side of an OR pair leads is remembered per day, not globally: the same
+ * pair can sit on Push and on Upper, and picking dumbbells on one shouldn't
+ * decide the other. The "|" separates the day from the group's own id, which
+ * already contains ":" and "+".
+ */
+export const pickKey = (day: DayId, choiceId: string) => `${day}|${choiceId}`
+
+/**
  * The exercises actually on the menu for a day, in the order the notes list
  * them, with OR choices resolved to whichever side is currently picked.
  *
@@ -19,16 +27,17 @@ export function resolveDay(state: AppState, day: DayId, optional: boolean): Exer
     const def = byId.get(entry.id)
     if (!def || def.retired) continue
 
-    if (!def.choiceId) {
+    const choiceId = def.choiceId
+    if (!choiceId) {
       out.push(def)
       continue
     }
 
-    if (seenGroups.has(def.choiceId)) continue
-    seenGroups.add(def.choiceId)
-    const members = state.catalog.filter((x) => x.choiceId === def.choiceId && !x.retired)
+    if (seenGroups.has(choiceId)) continue
+    seenGroups.add(choiceId)
+    const members = state.catalog.filter((x) => x.choiceId === choiceId && !x.retired)
     if (members.length === 0) continue
-    out.push(members.find((m) => m.id === state.choicePicks[def.choiceId!]) ?? members[0])
+    out.push(members.find((m) => m.id === state.choicePicks[pickKey(day, choiceId)]) ?? members[0])
   }
 
   return out

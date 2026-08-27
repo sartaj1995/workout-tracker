@@ -61,6 +61,7 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
           return (
             <ExerciseCard
               key={entry.exerciseId}
+              day={session.day}
               def={def}
               sets={entry.sets}
               prev={store.state.seeds[entry.exerciseId] ?? []}
