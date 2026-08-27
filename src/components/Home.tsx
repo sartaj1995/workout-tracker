@@ -4,6 +4,7 @@ import { useStore } from '../lib/store'
 import type { DayId } from '../lib/types'
 import { DAYS } from '../data/parse'
 import { DAY_COLOR, DAY_SHORT } from '../lib/theme'
+import { BackupNudge } from './BackupNudge'
 import { Icon } from './Icon'
 
 const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
@@ -81,6 +82,8 @@ export function Home({
 
   return (
     <div className="screen">
+      <BackupNudge />
+
       {active ? (
         <button className="resume" onClick={onResume}>
           <span className="resume__dot" />

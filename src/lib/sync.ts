@@ -26,6 +26,12 @@ export interface SyncRecord {
    * than no backup, so the failure is recorded for Settings to show.
    */
   lastError?: string
+  /**
+   * When a workout was saved that still isn't in Drive. Gyms have no signal,
+   * so the first attempt often fails; this keeps the debt visible and gets it
+   * retried the moment there's a connection again.
+   */
+  pendingSince?: number
 }
 
 export function loadSync(): SyncRecord {
@@ -43,6 +49,12 @@ export function saveSync(record: SyncRecord): void {
   } catch {
     // Storage full or blocked; sync bookkeeping is recoverable, so ignore.
   }
+}
+
+/** Records that Drive is behind local data, so a retry is owed. */
+export function markPending(): void {
+  const record = loadSync()
+  if (record.connected && !record.pendingSince) saveSync({ ...record, pendingSince: Date.now() })
 }
 
 export function disconnect(): void {
