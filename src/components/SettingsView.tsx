@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { plateBreakdown } from '../lib/calc'
 import { useStore } from '../lib/store'
 import { downloadBackup, freshState, readBackup } from '../lib/storage'
+import { DriveCard } from './DriveCard'
 import { Icon } from './Icon'
 import { NumberField, Toggle } from './ui'
 
@@ -127,6 +128,8 @@ export function SettingsView() {
           />
         </div>
       </div>
+
+      <DriveCard />
 
       <div className="section-title">Your data</div>
       <div className="card">
