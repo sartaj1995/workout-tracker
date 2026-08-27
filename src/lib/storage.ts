@@ -29,10 +29,11 @@ export const DEFAULT_PREFS: Prefs = {
 }
 
 export function freshState(): AppState {
-  const { defs, seeds } = parseNotes()
+  const { defs, seeds, dayPlan } = parseNotes()
   return {
     version: 1,
     notesHash: hashNotes(RAW_NOTES),
+    dayPlan,
     catalog: defs,
     seeds,
     sessions: [],
@@ -58,7 +59,9 @@ export function loadState(): AppState {
       choicePicks: parsed.choicePicks ?? {},
       active: parsed.active ?? null,
     }
-    return state.notesHash === base.notesHash ? state : mergeFromNotes(state)
+    // dayPlan arrived after the first releases, so rebuild if it's missing.
+    const current = state.notesHash === base.notesHash && state.dayPlan
+    return current ? state : mergeFromNotes(state)
   } catch {
     return freshState()
   }
@@ -81,7 +84,7 @@ export function saveState(state: AppState): void {
  * stop being offered in new workouts.
  */
 export function mergeFromNotes(state: AppState): AppState {
-  const { defs, seeds } = parseNotes()
+  const { defs, seeds, dayPlan } = parseNotes()
   const existing = new Map(state.catalog.map((d) => [d.id, d]))
   const catalog: ExerciseDef[] = defs.map((d) => {
     const prev = existing.get(d.id)
@@ -94,6 +97,7 @@ export function mergeFromNotes(state: AppState): AppState {
   return {
     ...state,
     notesHash: hashNotes(RAW_NOTES),
+    dayPlan,
     catalog: [...catalog, ...dropped],
     seeds: mergedSeeds,
     // Notes are the source of truth for which side of an OR pair leads, so an
@@ -125,5 +129,5 @@ export async function readBackup(file: File): Promise<AppState> {
     seeds: { ...base.seeds, ...(parsed.seeds ?? {}) },
   } as AppState
   // A backup taken before a notes edit still lands on the current exercises.
-  return state.notesHash === base.notesHash ? state : mergeFromNotes(state)
+  return state.notesHash === base.notesHash && state.dayPlan ? state : mergeFromNotes(state)
 }
