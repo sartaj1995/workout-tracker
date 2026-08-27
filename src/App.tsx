@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DayPreview } from './components/DayPreview'
 import { Home } from './components/Home'
 import { HistoryView } from './components/HistoryView'
@@ -8,6 +8,7 @@ import { RestBar } from './components/RestBar'
 import { SessionView } from './components/SessionView'
 import { SettingsView } from './components/SettingsView'
 import { useStore } from './lib/store'
+import { backUp, loadSync } from './lib/sync'
 import { useRestTimer } from './lib/useRestTimer'
 import type { DayId } from './lib/types'
 
@@ -36,6 +37,20 @@ export function App() {
   const [tab, setTab] = useState<Tab>('home')
   const [view, setView] = useState<View>('tabs')
   const [day, setDay] = useState<DayId>('push')
+
+  // A saved workout is the moment worth protecting, so push it straight to
+  // Drive. Silent by design: it never overwrites a newer copy (backUp refuses
+  // and flags a conflict), and a failure here must not interrupt training.
+  const savedCount = store.state.sessions.length
+  const lastBackedUp = useRef(savedCount)
+  useEffect(() => {
+    if (savedCount <= lastBackedUp.current) {
+      lastBackedUp.current = savedCount
+      return
+    }
+    lastBackedUp.current = savedCount
+    if (loadSync().connected) void backUp(store.state)
+  }, [savedCount, store.state])
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',

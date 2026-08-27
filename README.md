@@ -100,7 +100,41 @@ the order you just wrote.
 
 Data lives in `localStorage`, so clearing your browser data erases it.
 **Settings → Export backup** writes a JSON file; **Import backup** restores it.
-Worth doing every few weeks.
+
+### Google Drive
+
+Better: connect Google Drive in Settings and it keeps one backup file in your
+own Drive, re-uploaded automatically after every workout you save. Free, no
+server, and the same file restores onto a laptop.
+
+It uses the [`drive.file`](https://developers.google.com/identity/protocols/oauth2/scopes)
+scope, which reaches only files the app itself created — Google classes that as
+non-sensitive, so there's no verification and no "unverified app" warning, and
+none of your other Drive files are visible to it.
+
+Setup is once, about fifteen minutes:
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create a project.
+2. **APIs & Services → Library**, search *Google Drive API*, **Enable**.
+3. **OAuth consent screen** → **External**. Fill in app name and your email.
+4. **Publish** the app rather than leaving it in Testing. `drive.file` is
+   non-sensitive so publishing needs no review, and Testing mode expires your
+   sign-in every 7 days.
+5. **Credentials → Create credentials → OAuth client ID → Web application**.
+   Under *Authorised JavaScript origins* add your deployed URL, and
+   `http://localhost:5173` if you run it locally. Leave redirect URIs empty —
+   this flow doesn't use them.
+6. Copy the client ID.
+7. In Vercel, **Settings → Environment Variables**, add
+   `VITE_GOOGLE_CLIENT_ID` with that value, then **redeploy**. Vite bakes env
+   vars in at build time, so a redeploy is required.
+
+The client ID is public — it ends up in the JavaScript bundle by design, and is
+not a secret. Without it the Drive section just says it isn't configured.
+
+**Conflicts:** a backup never overwrites a copy this device hasn't seen. If you
+log on two devices, Settings says so and lets you choose which one wins rather
+than silently picking.
 
 ## Layout
 
@@ -113,6 +147,8 @@ src/
   lib/state.tsx      app state + localStorage persistence
   lib/storage.ts     load/save/export/import
   lib/useRestTimer.ts
+  lib/drive.ts       Google Drive auth + REST calls
+  lib/sync.ts        backup/restore orchestration and conflict handling
   components/        screens and the exercise card
 public/sw.js         offline cache
 scripts/make-icons.mjs  regenerates the PWA icons (npm run icons)

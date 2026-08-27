@@ -121,7 +121,11 @@ export function downloadBackup(state: AppState): void {
 }
 
 export async function readBackup(file: File): Promise<AppState> {
-  const text = await file.text()
+  return readBackupText(await file.text())
+}
+
+/** Shared by file import and the Drive restore. */
+export function readBackupText(text: string): AppState {
   const parsed = JSON.parse(text) as Partial<AppState>
   if (!parsed || !Array.isArray(parsed.sessions)) throw new Error('Not a workout backup file')
   const base = freshState()
