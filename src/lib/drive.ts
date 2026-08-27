@@ -78,21 +78,57 @@ function loadGis(): Promise<GoogleGis> {
   return gisLoading
 }
 
+const TOKEN_KEY = 'workout-tracker/drive-token'
+
 let accessToken: string | null = null
 let expiresAt = 0
+
+// Kept across reloads so a backup owed from the gym can go up on its own when
+// you get home, instead of waiting for another tap. Short-lived, and it only
+// ever unlocks the one file this app created.
+try {
+  const stored = localStorage.getItem(TOKEN_KEY)
+  if (stored) {
+    const parsed = JSON.parse(stored) as { token: string; expiresAt: number }
+    accessToken = parsed.token
+    expiresAt = parsed.expiresAt
+  }
+} catch {
+  // Unreadable or blocked; we just start without a token.
+}
+
+function remember(token: string | null, expiry: number): void {
+  accessToken = token
+  expiresAt = expiry
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, JSON.stringify({ token, expiresAt: expiry }))
+    else localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    // In-memory only for this session, which is still useful.
+  }
+}
 
 export function hasLiveToken(): boolean {
   return Boolean(accessToken) && Date.now() < expiresAt - 60_000
 }
 
+/** Thrown when a sign-in is needed but no user gesture is available. */
+export const NEEDS_SIGN_IN = 'Google sign-in needed.'
+
 /**
- * `interactive` shows Google's account chooser. Without it the browser tries to
- * reissue a token silently, which usually works but is blocked often enough on
- * iOS Safari that every caller needs an interactive fallback.
+ * Only an `interactive` call — one made from a tap — may reach Google. A stored
+ * token is reused either way, so a backup owed from the gym can still go up on
+ * its own once you're home, as long as it's within the token's hour.
  */
 export async function authorise(interactive: boolean): Promise<string> {
   if (!CLIENT_ID) throw new Error('Google Drive is not configured for this build.')
   if (hasLiveToken()) return accessToken as string
+
+  // Google's token request can raise a sign-in popup even when asked to stay
+  // quiet. A popup nobody asked for — on app open, say — is worse than a
+  // backup that waits, so background callers stop here and the UI offers a
+  // button instead.
+  if (!interactive) throw new Error(NEEDS_SIGN_IN)
 
   const gis = await loadGis()
   return new Promise<string>((resolve, reject) => {
@@ -104,9 +140,8 @@ export async function authorise(interactive: boolean): Promise<string> {
           reject(new Error(response.error ?? 'Google did not return a token.'))
           return
         }
-        accessToken = response.access_token
-        expiresAt = Date.now() + (response.expires_in ?? 3600) * 1000
-        resolve(accessToken)
+        remember(response.access_token, Date.now() + (response.expires_in ?? 3600) * 1000)
+        resolve(response.access_token)
       },
       error_callback: (error) => {
         reject(
@@ -118,14 +153,22 @@ export async function authorise(interactive: boolean): Promise<string> {
         )
       },
     })
-    client.requestAccessToken({ prompt: interactive ? 'consent' : '' })
+    client.requestAccessToken({ prompt: hasEverGranted() ? '' : 'consent' })
   })
+}
+
+/** A previous grant means Google can usually reissue without a full prompt. */
+function hasEverGranted(): boolean {
+  try {
+    return localStorage.getItem(TOKEN_KEY) !== null
+  } catch {
+    return false
+  }
 }
 
 export function forgetToken(): void {
   const token = accessToken
-  accessToken = null
-  expiresAt = 0
+  remember(null, 0)
   if (token) window.google?.accounts.oauth2.revoke(token)
 }
 
@@ -135,8 +178,7 @@ async function call(token: string, url: string, init: RequestInit = {}): Promise
     headers: { ...init.headers, Authorization: `Bearer ${token}` },
   })
   if (res.status === 401) {
-    accessToken = null
-    expiresAt = 0
+    remember(null, 0)
     throw new Error('Google sign-in expired. Connect again.')
   }
   if (!res.ok) throw new Error(`Drive returned ${res.status}. Try again in a moment.`)

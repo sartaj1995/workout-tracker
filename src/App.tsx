@@ -8,7 +8,8 @@ import { RestBar } from './components/RestBar'
 import { SessionView } from './components/SessionView'
 import { SettingsView } from './components/SettingsView'
 import { useStore } from './lib/store'
-import { backUp, loadSync } from './lib/sync'
+import { backUp, loadSync, markPending } from './lib/sync'
+import { useBackupRetry } from './lib/useBackupRetry'
 import { useRestTimer } from './lib/useRestTimer'
 import { useWakeLock } from './lib/useWakeLock'
 import type { DayId } from './lib/types'
@@ -40,19 +41,23 @@ export function App() {
   const [view, setView] = useState<View>('tabs')
   const [day, setDay] = useState<DayId>('push')
 
-  // A saved workout is the moment worth protecting, so push it straight to
-  // Drive. Silent by design: it never overwrites a newer copy (backUp refuses
-  // and flags a conflict), and a failure here must not interrupt training.
+  // A saved workout is the moment worth protecting, so record the debt first
+  // and then try to push it. Recording first matters: the attempt is usually
+  // made in a gym with no signal, and the debt is what gets it retried later.
   const savedCount = store.state.sessions.length
-  const lastBackedUp = useRef(savedCount)
+  const lastSeenCount = useRef(savedCount)
   useEffect(() => {
-    if (savedCount <= lastBackedUp.current) {
-      lastBackedUp.current = savedCount
+    if (savedCount <= lastSeenCount.current) {
+      lastSeenCount.current = savedCount
       return
     }
-    lastBackedUp.current = savedCount
-    if (loadSync().connected) void backUp(store.state)
+    lastSeenCount.current = savedCount
+    if (!loadSync().connected) return
+    markPending()
+    void backUp(store.state)
   }, [savedCount, store.state])
+
+  useBackupRetry(store.state)
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long',
