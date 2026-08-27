@@ -38,6 +38,7 @@ export function freshState(): AppState {
     catalog: defs,
     seeds,
     sessions: [],
+    activities: [],
     active: null,
     choicePicks: {},
     prefs: { ...DEFAULT_PREFS },
@@ -57,6 +58,7 @@ export function loadState(): AppState {
       catalog: parsed.catalog?.length ? parsed.catalog : base.catalog,
       seeds: { ...base.seeds, ...(parsed.seeds ?? {}) },
       sessions: parsed.sessions ?? [],
+      activities: parsed.activities ?? [],
       // Picks used to be keyed by pair alone. Those keys mean nothing now, so
       // drop them rather than carry dead entries forever.
       choicePicks: Object.fromEntries(
@@ -136,6 +138,8 @@ export function readBackupText(text: string): AppState {
     prefs: { ...base.prefs, ...(parsed.prefs ?? {}) },
     catalog: parsed.catalog?.length ? parsed.catalog : base.catalog,
     seeds: { ...base.seeds, ...(parsed.seeds ?? {}) },
+    // Backups written before activities existed simply have none.
+    activities: parsed.activities ?? [],
   } as AppState
   // A backup taken before a notes edit still lands on the current exercises.
   return state.notesHash === base.notesHash && state.dayPlan ? state : mergeFromNotes(state)

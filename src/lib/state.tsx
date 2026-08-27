@@ -161,6 +161,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             : s,
         ),
 
+      addActivity: (name, at, minutes) =>
+        update((s) => ({
+          ...s,
+          activities: [{ id: uid(), name, at, minutes }, ...s.activities].sort(
+            (a, b) => b.at - a.at,
+          ),
+        })),
+
+      removeActivity: (id) =>
+        update((s) => ({ ...s, activities: s.activities.filter((a) => a.id !== id) })),
+
       setNote: (exerciseId, note) =>
         update((s) => ({
           ...s,

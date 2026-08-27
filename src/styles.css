@@ -28,6 +28,8 @@
   --pull: #38bdf8;
   --legs: #a3e635;
   --upper: #c084fc;
+  /* Squash, a run — training that isn't one of the tracked days. */
+  --activity: #5eead4;
 
   /* Scale */
   --r-sm: 10px;

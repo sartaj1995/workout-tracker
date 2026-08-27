@@ -56,6 +56,19 @@ export interface Session {
   entries: LoggedExercise[]
 }
 
+/**
+ * Something you did that isn't one of the tracked gym days — squash, a run.
+ * Deliberately not a Session: there are no exercises, sets or progression to
+ * record, and modelling it as one would drag it into the progress charts.
+ */
+export interface Activity {
+  id: string
+  name: string
+  /** When it happened, which isn't always when it was logged. */
+  at: number
+  minutes?: number
+}
+
 export interface Prefs {
   restSeconds: number
   barWeight: number
@@ -90,6 +103,7 @@ export interface AppState {
   /** Last performed sets per exercise, used to prefill the next session. */
   seeds: Record<string, WorkSet[]>
   sessions: Session[]
+  activities: Activity[]
   active: Session | null
   /** Remembers which side of an OR pair was picked last. */
   choicePicks: Record<string, string>
