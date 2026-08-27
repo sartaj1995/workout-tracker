@@ -17,6 +17,10 @@ export interface SyncRecord {
   lastSyncedAt?: number
   /** Set when Drive moved on without us, so nothing is overwritten silently. */
   conflict?: boolean
+  /** True when the conflict is simply this device syncing for the first time. */
+  conflictFirstConnect?: boolean
+  /** Drive's timestamp on the copy we refused to overwrite. */
+  conflictRemoteTime?: string
   /**
    * Why the last attempt failed. A backup that quietly stops working is worse
    * than no backup, so the failure is recorded for Settings to show.
@@ -48,14 +52,17 @@ export function disconnect(): void {
 
 export type BackupResult =
   | { ok: true; record: SyncRecord }
-  | { ok: false; reason: 'conflict'; remoteModifiedTime: string }
+  | { ok: false; reason: 'conflict'; remoteModifiedTime: string; firstConnect: boolean }
   | { ok: false; reason: 'error'; message: string }
 
 /**
  * Write local data to Drive.
  *
- * Refuses when Drive holds a version this device has never seen — that means
- * another device wrote it, and overwriting would throw those sessions away.
+ * Refuses whenever Drive holds a version this device has never seen. That
+ * covers the obvious case — another device wrote it — and the dangerous one: a
+ * fresh install connecting for the first time, which has no local data and
+ * would otherwise wipe a perfectly good backup on contact.
+ *
  * `force` is the deliberate "mine wins" escape hatch.
  */
 export async function backUp(
@@ -67,9 +74,21 @@ export async function backUp(
     const record = loadSync()
     const remote = await findBackup(token)
 
-    if (remote && !force && record.seenModifiedTime && remote.modifiedTime !== record.seenModifiedTime) {
-      saveSync({ ...record, connected: true, conflict: true, lastError: undefined })
-      return { ok: false, reason: 'conflict', remoteModifiedTime: remote.modifiedTime }
+    if (remote && !force && remote.modifiedTime !== record.seenModifiedTime) {
+      saveSync({
+        ...record,
+        connected: true,
+        conflict: true,
+        conflictFirstConnect: !record.seenModifiedTime,
+        conflictRemoteTime: remote.modifiedTime,
+        lastError: undefined,
+      })
+      return {
+        ok: false,
+        reason: 'conflict',
+        remoteModifiedTime: remote.modifiedTime,
+        firstConnect: !record.seenModifiedTime,
+      }
     }
 
     const payload = JSON.stringify({ ...state, active: null }, null, 2)
