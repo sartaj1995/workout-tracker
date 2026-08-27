@@ -17,6 +17,8 @@ export interface Store {
   swapChoice: (day: DayId, choiceId: string, newId: string) => void
   addExercise: (exerciseId: string) => void
   removeExercise: (exerciseId: string) => void
+  addActivity: (name: string, at: number, minutes?: number) => void
+  removeActivity: (id: string) => void
   setNote: (exerciseId: string, note: string) => void
   setPrefs: (patch: Partial<Prefs>) => void
   reloadNotes: () => void

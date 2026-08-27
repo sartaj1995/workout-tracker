@@ -65,6 +65,7 @@ at all.
 | ⏱️ **Rest timer that starts itself** | Kicks off the moment you check a set off, then beeps and buzzes — reliably, even with the phone in your pocket. −15s / +15s if you need it. |
 | 🙈 **Skip today** | Not feeling an exercise? It leaves the session but stays in your plan, and comes back in its original slot. |
 | 📝 **Notes per exercise** | Seat height, pin position, what to try next week. |
+| 🏸 **Other activities** | Played squash instead? Log it in one tap. It counts towards your week and streak, so a rest day and a squash day don't look identical — but it never changes which gym session is up next. |
 | 📈 **Progress & history** | Estimated 1RM charted per exercise, every saved session, and an 8-week training grid. |
 | ☁️ **Optional Drive backup** | Your data, in your own Google Drive, in a folder only this app can see. Off by default. |
 

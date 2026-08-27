@@ -28,6 +28,8 @@
   --pull: #38bdf8;
   --legs: #a3e635;
   --upper: #c084fc;
+  /* Squash, a run — training that isn't one of the tracked days. */
+  --activity: #5eead4;
 
   /* Scale */
   --r-sm: 10px;
@@ -292,6 +294,51 @@ textarea {
 
 .day-card--next .day-card__rail {
   width: 5px;
+}
+
+/* ============ disclosure ============ */
+
+.disclose {
+  border-top: 1px solid var(--border);
+  margin-top: var(--s-4);
+}
+
+.disclose > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.18s var(--ease-out);
+}
+
+/* Safari draws its own triangle without this. */
+.disclose > summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclose > summary:active {
+  color: var(--text);
+}
+
+.disclose__chev {
+  margin-left: auto;
+  transition: transform 0.2s var(--ease-out);
+}
+
+.disclose[open] > summary .disclose__chev {
+  transform: rotate(180deg);
+}
+
+.disclose__body {
+  padding-bottom: var(--s-3);
 }
 
 /* ============ resume banner ============ */

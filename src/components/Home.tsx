@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { plural, relativeDay, startOfDay } from '../lib/calc'
 import { resolveDay } from '../lib/plan'
 import { useStore } from '../lib/store'
@@ -5,7 +6,9 @@ import type { DayId } from '../lib/types'
 import { DAYS } from '../data/parse'
 import { DAY_COLOR, DAY_SHORT } from '../lib/theme'
 import { BackupNudge } from './BackupNudge'
+import { Disclosure } from './Disclosure'
 import { Icon } from './Icon'
+import { LogActivity } from './LogActivity'
 
 const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
@@ -17,7 +20,8 @@ export function Home({
   onResume: () => void
 }) {
   const store = useStore()
-  const { sessions, active } = store.state
+  const { sessions, activities, active } = store.state
+  const [logging, setLogging] = useState(false)
 
   const lastOf = (day: DayId) => sessions.find((s) => s.day === day)
 
@@ -30,14 +34,18 @@ export function Home({
   const due = [...ready].sort((a, b) => (lastOf(a.id)?.startedAt ?? 0) - (lastOf(b.id)?.startedAt ?? 0))[0]
   const showNext = sessions.length > 0 && !active
 
-  const thisWeek = sessions.filter((s) => s.startedAt > Date.now() - 7 * 86400000).length
-  const streak = countStreak(sessions.map((s) => s.startedAt))
+  // Everything you did counts towards the week and the streak, whether or not
+  // it was one of the tracked gym days.
+  const allTraining = [...sessions.map((s) => s.startedAt), ...activities.map((a) => a.at)]
+  const thisWeek = allTraining.filter((at) => at > Date.now() - 7 * 86400000).length
+  const streak = countStreak(allTraining)
 
   // Last seven days, oldest first, so today sits on the right.
   const week = Array.from({ length: 7 }, (_, i) => {
     const at = startOfDay(Date.now() - (6 - i) * 86400000)
     const session = sessions.find((s) => startOfDay(s.startedAt) === at)
-    return { at, day: session?.day ?? null }
+    const activity = activities.find((a) => startOfDay(a.at) === at)
+    return { at, day: session?.day ?? null, activity: session ? null : (activity ?? null) }
   })
 
   const dayCard = (d: (typeof DAYS)[number]) => {
@@ -106,14 +114,15 @@ export function Home({
       <p className="section-title">Choose your session</p>
       <div className="day-grid">{rotation.map(dayCard)}</div>
 
+      {/* Reached for occasionally, so it stays folded away rather than pushing
+          the week and the stats below the fold every time. */}
       {substitutes.length ? (
-        <>
-          <p className="section-title">Short on time</p>
+        <Disclosure label="Short on time">
           <div className="day-grid">{substitutes.map(dayCard)}</div>
-          <p className="tiny muted" style={{ marginTop: 'var(--s-2)' }}>
+          <p className="tiny muted" style={{ marginTop: 'var(--s-2)', marginBottom: 0 }}>
             Swap one of these in for a rotation day. It doesn't change what's up next.
           </p>
-        </>
+        </Disclosure>
       ) : null}
 
       <p className="section-title">This week</p>
@@ -124,23 +133,47 @@ export function Home({
           return (
             <div
               key={d.at}
-              className={`week-day${d.day ? ' week-day--done' : ''}${isToday ? ' week-day--today' : ''}`}
-              style={d.day ? ({ '--dc': DAY_COLOR[d.day] } as React.CSSProperties) : undefined}
-              title={label ? `${label} on ${new Date(d.at).toDateString()}` : 'Rest day'}
+              className={`week-day${d.day || d.activity ? ' week-day--done' : ''}${isToday ? ' week-day--today' : ''}`}
+              style={
+                d.day
+                  ? ({ '--dc': DAY_COLOR[d.day] } as React.CSSProperties)
+                  : d.activity
+                    ? ({ '--dc': 'var(--activity)' } as React.CSSProperties)
+                    : undefined
+              }
+              title={
+                label
+                  ? `${label} on ${new Date(d.at).toDateString()}`
+                  : d.activity
+                    ? `${d.activity.name} on ${new Date(d.at).toDateString()}`
+                    : 'Rest day'
+              }
             >
               <span className="week-day__label">{WEEKDAY[new Date(d.at).getDay()]}</span>
-              <span className="week-day__mark" aria-label={label ? `${label} day` : 'Rest day'}>
-                {d.day ? DAY_SHORT[d.day] : ''}
+              <span
+                className="week-day__mark"
+                aria-label={label ? `${label} day` : d.activity ? d.activity.name : 'Rest day'}
+              >
+                {d.day ? DAY_SHORT[d.day] : d.activity ? d.activity.name.slice(0, 2) : ''}
               </span>
             </div>
           )
         })}
       </div>
 
+      {/* Sits under the week strip, where the gap you're filling is visible. */}
+      <button
+        className="btn block ghost"
+        style={{ marginBottom: 'var(--s-3)' }}
+        onClick={() => setLogging(true)}
+      >
+        <Icon name="plus" size={17} /> Log another activity
+      </button>
+
       <div className="stat-grid">
         <div className="stat">
-          <b>{sessions.length}</b>
-          <span>workouts</span>
+          <b>{allTraining.length}</b>
+          <span>sessions</span>
         </div>
         <div className="stat">
           <b>{thisWeek}</b>
@@ -151,6 +184,8 @@ export function Home({
           <span>week streak</span>
         </div>
       </div>
+
+      {logging ? <LogActivity onClose={() => setLogging(false)} /> : null}
 
       {sessions.length === 0 ? (
         <p className="empty">
