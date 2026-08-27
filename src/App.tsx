@@ -10,6 +10,7 @@ import { SettingsView } from './components/SettingsView'
 import { useStore } from './lib/store'
 import { backUp, loadSync } from './lib/sync'
 import { useRestTimer } from './lib/useRestTimer'
+import { useWakeLock } from './lib/useWakeLock'
 import type { DayId } from './lib/types'
 
 type Tab = 'home' | 'history' | 'progress' | 'settings'
@@ -34,6 +35,7 @@ type View = 'tabs' | 'preview' | 'session'
 export function App() {
   const store = useStore()
   const rest = useRestTimer(store.state.prefs)
+  useWakeLock(store.state.prefs.keepScreenOn && store.state.active !== null)
   const [tab, setTab] = useState<Tab>('home')
   const [view, setView] = useState<View>('tabs')
   const [day, setDay] = useState<DayId>('push')
@@ -99,7 +101,7 @@ export function App() {
       ) : null}
       {tab === 'history' ? <HistoryView /> : null}
       {tab === 'progress' ? <ProgressView /> : null}
-      {tab === 'settings' ? <SettingsView /> : null}
+      {tab === 'settings' ? <SettingsView onTestAlert={rest.preview} /> : null}
 
       <RestBar rest={rest} />
 

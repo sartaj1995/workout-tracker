@@ -24,6 +24,7 @@ export const DEFAULT_PREFS: Prefs = {
   plates: [25, 20, 15, 10, 5, 2.5, 1.25],
   soundOn: true,
   vibrateOn: true,
+  keepScreenOn: true,
   weightStep: 2.5,
   repCeiling: 10,
 }
