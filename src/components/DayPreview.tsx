@@ -109,7 +109,7 @@ export function DayPreview({
                             <span key={m.id}>
                               <button
                                 className="linkish"
-                                onClick={() => store.swapChoice(def.choiceId!, m.id)}
+                                onClick={() => store.swapChoice(day, def.choiceId!, m.id)}
                               >
                                 {m.name}
                               </button>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cloneSet, emptySet, isLogged, score, topScore } from './calc'
-import { resolveDay } from './plan'
+import { pickKey, resolveDay } from './plan'
 import { StoreCtx, type Store } from './store'
 import { loadState, mergeFromNotes, saveState } from './storage'
 import type { AppState, ExerciseDef, Session, WorkSet } from './types'
@@ -111,12 +111,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           sets.map((s, i) => (i === index ? { ...s, drops: s.drops.filter((_, j) => j !== di) } : s)),
         ),
 
-      swapChoice: (choiceId, newId) =>
+      swapChoice: (day, choiceId, newId) =>
         update((s) => {
-          const picks = { ...s.choicePicks, [choiceId]: newId }
-          if (!s.active) return { ...s, choicePicks: picks }
-          const members = s.catalog.filter((d) => d.choiceId === choiceId).map((d) => d.id)
+          const picks = { ...s.choicePicks, [pickKey(day, choiceId)]: newId }
           const next = { ...s, choicePicks: picks }
+          // Only touch the running session if the swap was made on its own day.
+          if (!s.active || s.active.day !== day) return next
+          const members = s.catalog.filter((d) => d.choiceId === choiceId).map((d) => d.id)
           const def = s.catalog.find((d) => d.id === newId)
           if (!def) return next
           const entries = s.active.entries.map((e) =>

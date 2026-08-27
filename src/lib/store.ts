@@ -14,7 +14,7 @@ export interface Store {
   addDrop: (exerciseId: string, index: number) => void
   patchDrop: (exerciseId: string, index: number, di: number, patch: Partial<WorkSet>) => void
   removeDrop: (exerciseId: string, index: number, di: number) => void
-  swapChoice: (choiceId: string, newId: string) => void
+  swapChoice: (day: DayId, choiceId: string, newId: string) => void
   addExercise: (exerciseId: string) => void
   removeExercise: (exerciseId: string) => void
   setNote: (exerciseId: string, note: string) => void

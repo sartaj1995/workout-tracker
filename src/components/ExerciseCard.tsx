@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { formatSets, isLogged, plural, score, suggestion, unitLabel } from '../lib/calc'
 import { useStore } from '../lib/store'
-import type { ExerciseDef, WorkSet } from '../lib/types'
+import type { DayId, ExerciseDef, WorkSet } from '../lib/types'
 import { Icon } from './Icon'
 import { NumberField, Sheet } from './ui'
 
 const ghost = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n))
 
 interface Props {
+  /** The day this card is being logged under, so an OR swap stays on it. */
+  day: DayId
   def: ExerciseDef
   sets: WorkSet[]
   prev: WorkSet[]
@@ -15,7 +17,7 @@ interface Props {
   onLogged: () => void
 }
 
-export function ExerciseCard({ def, sets, prev, members, onLogged }: Props) {
+export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props) {
   const store = useStore()
   const [editingNote, setEditingNote] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -76,7 +78,7 @@ export function ExerciseCard({ def, sets, prev, members, onLogged }: Props) {
             <button
               key={m.id}
               className={m.id === def.id ? 'on' : ''}
-              onClick={() => store.swapChoice(def.choiceId!, m.id)}
+              onClick={() => store.swapChoice(day, def.choiceId!, m.id)}
             >
               {m.name}
             </button>

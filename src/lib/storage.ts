@@ -56,7 +56,11 @@ export function loadState(): AppState {
       catalog: parsed.catalog?.length ? parsed.catalog : base.catalog,
       seeds: { ...base.seeds, ...(parsed.seeds ?? {}) },
       sessions: parsed.sessions ?? [],
-      choicePicks: parsed.choicePicks ?? {},
+      // Picks used to be keyed by pair alone. Those keys mean nothing now, so
+      // drop them rather than carry dead entries forever.
+      choicePicks: Object.fromEntries(
+        Object.entries(parsed.choicePicks ?? {}).filter(([k]) => k.includes('|')),
+      ),
       active: parsed.active ?? null,
     }
     // dayPlan arrived after the first releases, so rebuild if it's missing.
