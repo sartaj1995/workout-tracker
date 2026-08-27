@@ -6,6 +6,7 @@ import type { DayId } from '../lib/types'
 import { DAYS } from '../data/parse'
 import { DAY_COLOR, DAY_SHORT } from '../lib/theme'
 import { BackupNudge } from './BackupNudge'
+import { Disclosure } from './Disclosure'
 import { Icon } from './Icon'
 import { LogActivity } from './LogActivity'
 
@@ -113,19 +114,16 @@ export function Home({
       <p className="section-title">Choose your session</p>
       <div className="day-grid">{rotation.map(dayCard)}</div>
 
+      {/* Reached for occasionally, so it stays folded away rather than pushing
+          the week and the stats below the fold every time. */}
       {substitutes.length ? (
-        <>
-          <p className="section-title">Short on time</p>
+        <Disclosure label="Short on time">
           <div className="day-grid">{substitutes.map(dayCard)}</div>
-          <p className="tiny muted" style={{ marginTop: 'var(--s-2)' }}>
+          <p className="tiny muted" style={{ marginTop: 'var(--s-2)', marginBottom: 0 }}>
             Swap one of these in for a rotation day. It doesn't change what's up next.
           </p>
-        </>
+        </Disclosure>
       ) : null}
-
-      <button className="btn block ghost" style={{ marginTop: 'var(--s-4)' }} onClick={() => setLogging(true)}>
-        <Icon name="plus" size={17} /> Log another activity
-      </button>
 
       <p className="section-title">This week</p>
       <div className="week-strip">
@@ -162,6 +160,15 @@ export function Home({
           )
         })}
       </div>
+
+      {/* Sits under the week strip, where the gap you're filling is visible. */}
+      <button
+        className="btn block ghost"
+        style={{ marginBottom: 'var(--s-3)' }}
+        onClick={() => setLogging(true)}
+      >
+        <Icon name="plus" size={17} /> Log another activity
+      </button>
 
       <div className="stat-grid">
         <div className="stat">
