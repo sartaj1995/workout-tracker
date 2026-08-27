@@ -69,6 +69,11 @@ Adductor - 85x10 80x9 75x9 70x10
 Wall sit - 110s
 
 Upper
+Dumbbell press
+Chest sup row
+Lat pulldown (neutral)
+Lateral raise
+Tricep pushdown (single)
 `
 
 /**

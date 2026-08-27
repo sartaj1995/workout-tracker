@@ -1,11 +1,16 @@
-import type { DayId, ExerciseDef, Metric, Unit, WorkSet } from '../lib/types'
+import type { DayId, DayPlanEntry, ExerciseDef, Metric, Unit, WorkSet } from '../lib/types'
 import { OVERRIDES, RAW_NOTES } from './notes'
 
-export const DAYS: { id: DayId; label: string }[] = [
-  { id: 'push', label: 'Push' },
-  { id: 'pull', label: 'Pull' },
-  { id: 'legs', label: 'Legs' },
-  { id: 'upper', label: 'Upper' },
+/**
+ * `rotation: false` marks a day you reach for *instead of* a rotation day when
+ * time is short. It never claims the "up next" slot, and leaving it alone never
+ * makes it overdue.
+ */
+export const DAYS: { id: DayId; label: string; rotation: boolean }[] = [
+  { id: 'push', label: 'Push', rotation: true },
+  { id: 'pull', label: 'Pull', rotation: true },
+  { id: 'legs', label: 'Legs', rotation: true },
+  { id: 'upper', label: 'Upper', rotation: false },
 ]
 
 export function slugify(name: string): string {
@@ -53,11 +58,14 @@ function parseToken(token: string, metric: Metric): WorkSet | null {
 export interface ParsedNotes {
   defs: ExerciseDef[]
   seeds: Record<string, WorkSet[]>
+  dayPlan: Record<string, DayPlanEntry[]>
 }
 
 export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
   const defs: ExerciseDef[] = []
   const seeds: Record<string, WorkSet[]> = {}
+  const dayPlan: Record<string, DayPlanEntry[]> = {}
+  for (const d of DAYS) dayPlan[d.id] = []
 
   let day: DayId | null = null
   let optional = false
@@ -90,7 +98,22 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
     if (!day) continue
 
     const split = text.indexOf(' - ')
-    if (split === -1) continue
+
+    // A bare name with no sets is a reference to an exercise defined under an
+    // earlier day. The exercise itself is shared — same history, same charts —
+    // it just also appears in this day's running order. Any OR alternatives it
+    // already has come with it.
+    if (split === -1) {
+      const refId = slugify(text)
+      if (defs.some((d) => d.id === refId)) {
+        if (sawBlank) optional = true
+        sawBlank = false
+        pendingOr = false
+        dayPlan[day].push({ id: refId, optional })
+      }
+      continue
+    }
+
     const name = text.slice(0, split).trim()
     let rest = text.slice(split + 3).trim()
 
@@ -125,9 +148,10 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
 
     defs.push({ id, name, day, optional, choiceId, metric, unit, note, targetSets: Math.max(sets.length, 3) })
     seeds[id] = sets
+    dayPlan[day].push({ id, optional })
   }
 
-  return { defs: stabiliseChoiceIds(defs), seeds }
+  return { defs: stabiliseChoiceIds(defs), seeds, dayPlan }
 }
 
 /**

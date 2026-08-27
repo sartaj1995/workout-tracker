@@ -59,6 +59,7 @@ Dumbbell press - 30x10 25x11 25x10 25x9
 | `OR` between two lines | Makes them alternatives you pick between |
 | A blank line inside a day | Everything below it is optional/extra |
 | `... (note)` after the sets | Becomes the exercise note |
+| A bare name, no ` - ` | Reuses an exercise from an earlier day |
 
 Machines numbered by plate rather than kilos, and lifts measured in reps or
 seconds instead of weight, are listed in `OVERRIDES` at the bottom of the same
@@ -72,6 +73,18 @@ alone either way.
 Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
+
+`Upper` is marked as a substitute rather than part of the rotation (the
+`rotation` flag on `DAYS` in [`src/data/parse.ts`](src/data/parse.ts)). It sits
+under *Short on time* on the home screen, never claims the **Up next** badge,
+and training it doesn't change which rotation day comes next — swapping it in
+for a Push day leaves Push just as overdue as it was.
+
+A day can reuse an exercise from an earlier day by listing its name on its own,
+with no sets — that's how `Upper` is built out of Push and Pull lifts. It's the
+**same exercise**, not a copy: one history, one progress chart, and it brings
+its `OR` alternatives with it. Because the alternatives are shared too,
+switching a pair on one day switches it on the other.
 
 A heading with nothing under it is a day you haven't filled in yet. It shows on
 the home screen as *Not set up yet* and can't be started — `Upper` ships that

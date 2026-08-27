@@ -8,15 +8,24 @@ import { Icon } from './Icon'
 
 const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
-export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void; onResume: () => void }) {
+export function Home({
+  onOpenDay,
+  onResume,
+}: {
+  onOpenDay: (day: DayId) => void
+  onResume: () => void
+}) {
   const store = useStore()
   const { sessions, active } = store.state
 
   const lastOf = (day: DayId) => sessions.find((s) => s.day === day)
 
-  // Whichever day you've left longest is the one the app leads with. A day with
-  // no exercises yet is never "due" — it has nothing to train.
-  const ready = DAYS.filter((d) => resolveDay(store.state, d.id, false).length > 0)
+  // The rotation leads with whichever day you've left longest. Substitute days
+  // sit outside it entirely: they never claim the slot, and leaving one alone
+  // never makes it overdue. A day with no exercises has nothing to train.
+  const rotation = DAYS.filter((d) => d.rotation)
+  const substitutes = DAYS.filter((d) => !d.rotation)
+  const ready = rotation.filter((d) => resolveDay(store.state, d.id, false).length > 0)
   const due = [...ready].sort((a, b) => (lastOf(a.id)?.startedAt ?? 0) - (lastOf(b.id)?.startedAt ?? 0))[0]
   const showNext = sessions.length > 0 && !active
 
@@ -29,6 +38,46 @@ export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void;
     const session = sessions.find((s) => startOfDay(s.startedAt) === at)
     return { at, day: session?.day ?? null }
   })
+
+  const dayCard = (d: (typeof DAYS)[number]) => {
+    const last = lastOf(d.id)
+    const count = resolveDay(store.state, d.id, false).length
+    const extras = resolveDay(store.state, d.id, true).length
+    const isNext = showNext && due?.id === d.id
+    const empty = count === 0 && extras === 0
+    return (
+      <button
+        key={d.id}
+        className={`day-card${isNext ? ' day-card--next' : ''}`}
+        style={{ '--dc': DAY_COLOR[d.id] } as React.CSSProperties}
+        onClick={() => onOpenDay(d.id)}
+      >
+        <span className="day-card__rail" />
+        <span className="day-card__body">
+          {isNext ? (
+            <span className="badge">
+              <Icon name="flame" size={12} /> Up next
+            </span>
+          ) : null}
+          <span className="day-card__name">{d.label}</span>
+          <span className="day-card__meta">
+            {empty ? 'Not set up yet' : plural(count, 'exercise')}
+            {!empty && extras ? ` · ${extras} extra` : ''}
+          </span>
+          <span className="day-card__last">
+            {empty
+              ? 'Add exercises to your notes'
+              : last
+                ? `Last trained ${relativeDay(last.startedAt)}`
+                : 'Not trained yet'}
+          </span>
+        </span>
+        <span className="day-card__go">
+          <Icon name="chevronRight" size={22} />
+        </span>
+      </button>
+    )
+  }
 
   return (
     <div className="screen">
@@ -52,47 +101,17 @@ export function Home({ onOpenDay, onResume }: { onOpenDay: (day: DayId) => void;
       ) : null}
 
       <p className="section-title">Choose your session</p>
-      <div className="day-grid">
-        {DAYS.map((d) => {
-          const last = lastOf(d.id)
-          const count = resolveDay(store.state, d.id, false).length
-          const extras = resolveDay(store.state, d.id, true).length
-          const isNext = showNext && due?.id === d.id
-          const empty = count === 0 && extras === 0
-          return (
-            <button
-              key={d.id}
-              className={`day-card${isNext ? ' day-card--next' : ''}`}
-              style={{ '--dc': DAY_COLOR[d.id] } as React.CSSProperties}
-              onClick={() => onOpenDay(d.id)}
-            >
-              <span className="day-card__rail" />
-              <span className="day-card__body">
-                {isNext ? (
-                  <span className="badge">
-                    <Icon name="flame" size={12} /> Up next
-                  </span>
-                ) : null}
-                <span className="day-card__name">{d.label}</span>
-                <span className="day-card__meta">
-                  {empty ? 'Not set up yet' : plural(count, 'exercise')}
-                  {!empty && extras ? ` · ${extras} extra` : ''}
-                </span>
-                <span className="day-card__last">
-                  {empty
-                    ? 'Add exercises to your notes'
-                    : last
-                      ? `Last trained ${relativeDay(last.startedAt)}`
-                      : 'Not trained yet'}
-                </span>
-              </span>
-              <span className="day-card__go">
-                <Icon name="chevronRight" size={22} />
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      <div className="day-grid">{rotation.map(dayCard)}</div>
+
+      {substitutes.length ? (
+        <>
+          <p className="section-title">Short on time</p>
+          <div className="day-grid">{substitutes.map(dayCard)}</div>
+          <p className="tiny muted" style={{ marginTop: 'var(--s-2)' }}>
+            Swap one of these in for a rotation day. It doesn't change what's up next.
+          </p>
+        </>
+      ) : null}
 
       <p className="section-title">This week</p>
       <div className="week-strip">

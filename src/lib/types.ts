@@ -69,10 +69,21 @@ export interface Prefs {
   repCeiling: number
 }
 
+/** One line of a day's plan: which exercise, and whether it's optional there. */
+export interface DayPlanEntry {
+  id: string
+  optional: boolean
+}
+
 export interface AppState {
   version: number
   /** Fingerprint of the notes the catalog was built from. */
   notesHash: string
+  /**
+   * The running order of each day, built from the notes. Held separately from
+   * the catalog because one exercise can appear on more than one day.
+   */
+  dayPlan: Record<string, DayPlanEntry[]>
   catalog: ExerciseDef[]
   /** Last performed sets per exercise, used to prefill the next session. */
   seeds: Record<string, WorkSet[]>
