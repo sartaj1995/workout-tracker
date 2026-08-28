@@ -117,6 +117,22 @@ export function sessionVolume(session: Session, defs: Record<string, ExerciseDef
   }, 0)
 }
 
+/**
+ * Whether any work has been put into these sets — checked off, or merely typed
+ * in. Weaker than `isLogged`, and deliberately so: it guards against throwing
+ * away numbers that haven't been ticked yet.
+ */
+export function isTouched(sets: WorkSet[]): boolean {
+  return sets.some(
+    (s) =>
+      s.done ||
+      s.weight !== null ||
+      s.reps !== null ||
+      s.seconds !== null ||
+      s.drops.some((d) => d.weight !== null || d.reps !== null),
+  )
+}
+
 export function isLogged(s: WorkSet, def: ExerciseDef): boolean {
   if (def.metric === 'time' || def.metric === 'weight_time') return (s.seconds ?? 0) > 0
   if (def.metric === 'reps') return (s.reps ?? 0) > 0

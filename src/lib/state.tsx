@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { cloneSet, emptySet, isLogged, score, topScore } from './calc'
+import { cloneSet, emptySet, isLogged, isTouched, score, topScore } from './calc'
 import { pickKey, resolveDay } from './plan'
 import { StoreCtx, type Store } from './store'
 import { loadState, mergeFromNotes, saveState } from './storage'
@@ -111,21 +111,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           sets.map((s, i) => (i === index ? { ...s, drops: s.drops.filter((_, j) => j !== di) } : s)),
         ),
 
-      swapChoice: (day, choiceId, newId) =>
+      /**
+       * Take up one side of an OR pair.
+       *
+       * If the side currently on the card is untouched, this is a plain swap.
+       * If it already has work in it, the new one is added *alongside* rather
+       * than over the top: throwing away logged sets to look at the
+       * alternative is never what was meant, and doing both halves of a pair
+       * in one session is a perfectly ordinary thing to want.
+       */
+      pickChoice: (day, choiceId, newId) =>
         update((s) => {
           const picks = { ...s.choicePicks, [pickKey(day, choiceId)]: newId }
           const next = { ...s, choicePicks: picks }
-          // Only touch the running session if the swap was made on its own day.
+          // Only touch the running session if the pick was made on its own day.
           if (!s.active || s.active.day !== day) return next
-          const members = s.catalog.filter((d) => d.choiceId === choiceId).map((d) => d.id)
           const def = s.catalog.find((d) => d.id === newId)
           if (!def) return next
-          const entries = s.active.entries.map((e) =>
-            members.includes(e.exerciseId) && e.exerciseId !== newId
-              ? { exerciseId: newId, sets: startingSets(next, def) }
-              : e,
-          )
-          return { ...next, active: { ...s.active, entries } }
+
+          const entries = s.active.entries
+          if (entries.some((e) => e.exerciseId === newId)) return next
+
+          const members = new Set(s.catalog.filter((d) => d.choiceId === choiceId).map((d) => d.id))
+          const at = entries.findIndex((e) => members.has(e.exerciseId))
+          if (at === -1) return next
+
+          const entry = { exerciseId: newId, sets: startingSets(next, def) }
+          const replace = !isTouched(entries[at].sets)
+          const nextEntries = [...entries]
+          nextEntries.splice(at + (replace ? 0 : 1), replace ? 1 : 0, entry)
+          return { ...next, active: { ...s.active, entries: nextEntries } }
         }),
 
       addExercise: (exerciseId) =>

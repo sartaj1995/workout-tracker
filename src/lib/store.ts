@@ -14,7 +14,12 @@ export interface Store {
   addDrop: (exerciseId: string, index: number) => void
   patchDrop: (exerciseId: string, index: number, di: number, patch: Partial<WorkSet>) => void
   removeDrop: (exerciseId: string, index: number, di: number) => void
-  swapChoice: (day: DayId, choiceId: string, newId: string) => void
+  /**
+   * Take up `newId` from an OR pair on `day`. Swaps in place when the side on
+   * show is still untouched; otherwise the new one joins it, so both get
+   * logged and nothing already entered is lost.
+   */
+  pickChoice: (day: DayId, choiceId: string, newId: string) => void
   addExercise: (exerciseId: string) => void
   removeExercise: (exerciseId: string) => void
   addActivity: (name: string, at: number, minutes?: number) => void
