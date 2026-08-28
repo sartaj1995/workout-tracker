@@ -109,6 +109,13 @@ chart, and it brings its `OR` alternatives with it. Which side of a pair you're
 using is remembered per day, though — dumbbells on Push and the machine on Upper
 is fine, and switching one doesn't disturb the other.
 
+**Switching an `OR` never costs you work.** Tapping the other side of a pair
+swaps it in while the card is still empty — that's the everyday case, deciding
+what you're doing before you start. Once anything is typed or ticked, the
+alternative is added *below* instead of replacing it, so the sets you already
+logged stay put and you can log both halves in one session. That's also how you
+deliberately do both: log a set on one, then tap the other.
+
 **Defaults come from the notes.** Whichever side of an `OR` pair is listed
 **first** is the one offered by default. Because the notes decide that, editing
 them clears any choice you'd swapped to inside the app — otherwise an old in-app

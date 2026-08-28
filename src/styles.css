@@ -663,6 +663,17 @@ textarea {
   font-weight: 600;
 }
 
+/*
+ * The other side of the pair, also being done today. Outlined rather than
+ * filled: it belongs to today, but the filled pill still says which card
+ * you're looking at.
+ */
+.choice button.also {
+  border-color: color-mix(in srgb, var(--primary) 55%, transparent);
+  color: color-mix(in srgb, var(--text) 75%, var(--muted));
+  font-weight: 600;
+}
+
 .note {
   display: flex;
   gap: var(--s-2);

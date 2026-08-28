@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatSets, isLogged, plural, score, suggestion, unitLabel } from '../lib/calc'
 import { useStore } from '../lib/store'
 import type { DayId, ExerciseDef, WorkSet } from '../lib/types'
@@ -7,8 +7,11 @@ import { NumberField, Sheet } from './ui'
 
 const ghost = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n))
 
+/** So a choice pill can jump to the other side's card when both are on today. */
+const cardId = (exerciseId: string) => `ex-${exerciseId}`
+
 interface Props {
-  /** The day this card is being logged under, so an OR swap stays on it. */
+  /** The day this card is being logged under, so an OR pick stays on it. */
   day: DayId
   def: ExerciseDef
   sets: WorkSet[]
@@ -22,6 +25,19 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
   const [editingNote, setEditingNote] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [noteDraft, setNoteDraft] = useState(def.note ?? '')
+
+  const inSession = new Set(store.state.active?.entries.map((e) => e.exerciseId) ?? [])
+
+  // With more than two alternatives the pill strip overflows, and the one this
+  // card is for can start out scrolled off the end. Nudge it into view — only
+  // sideways, so opening a session doesn't jump the page around.
+  const strip = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const row = strip.current
+    const on = row?.querySelector<HTMLElement>('button.on')
+    if (!row || !on) return
+    row.scrollLeft += on.getBoundingClientRect().left - row.getBoundingClientRect().left - 14
+  }, [def.id])
 
   const doneCount = sets.filter((s) => s.done).length
   const complete = doneCount > 0 && doneCount === sets.length
@@ -59,7 +75,7 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
   }
 
   return (
-    <div className={`ex${complete ? ' complete' : ''}`}>
+    <div id={cardId(def.id)} className={`ex${complete ? ' complete' : ''}`}>
       <div className="ex-head">
         <div className="title">
           {def.name}
@@ -73,16 +89,29 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
       </div>
 
       {members.length > 1 ? (
-        <div className="choice">
-          {members.map((m) => (
-            <button
-              key={m.id}
-              className={m.id === def.id ? 'on' : ''}
-              onClick={() => store.swapChoice(day, def.choiceId!, m.id)}
-            >
-              {m.name}
-            </button>
-          ))}
+        <div className="choice" ref={strip}>
+          {members.map((m) => {
+            const here = m.id === def.id
+            // Both sides of a pair can be on today's list at once, so a pill
+            // says "in today's session", not "instead of this one".
+            const alsoOn = !here && inSession.has(m.id)
+            return (
+              <button
+                key={m.id}
+                className={here ? 'on' : alsoOn ? 'also' : ''}
+                aria-pressed={here || alsoOn}
+                onClick={() =>
+                  alsoOn
+                    ? document
+                        .getElementById(cardId(m.id))
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    : store.pickChoice(day, def.choiceId!, m.id)
+                }
+              >
+                {m.name}
+              </button>
+            )
+          })}
         </div>
       ) : null}
 
