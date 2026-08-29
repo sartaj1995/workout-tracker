@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatClock, formatSets, plural } from '../lib/calc'
+import { primeToken } from '../lib/drive'
 import { resolveDay } from '../lib/plan'
 import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
@@ -124,6 +125,10 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
             <button
               className="btn success"
               onClick={() => {
+                // Before anything else, while this tap still counts as one:
+                // the backup that follows needs a live Google token, and the
+                // old one has almost certainly expired during the workout.
+                primeToken()
                 store.finishSession()
                 rest.stop()
                 setConfirmFinish(false)

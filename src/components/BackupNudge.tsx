@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { relativeDay } from '../lib/calc'
 import { useStore } from '../lib/store'
-import { NEEDS_SIGN_IN } from '../lib/drive'
+import { NEEDS_SIGN_IN, primeToken } from '../lib/drive'
 import { backUp, loadSync, type SyncRecord } from '../lib/sync'
 import { Icon } from './Icon'
 
@@ -35,6 +35,7 @@ export function BackupNudge() {
         className="chip"
         disabled={busy}
         onClick={async () => {
+          primeToken()
           setBusy(true)
           await backUp(store.state, { interactive: true })
           setBusy(false)

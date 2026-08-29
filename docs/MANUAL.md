@@ -92,6 +92,12 @@ not a secret. Without it the Drive section just says it isn't configured.
 log on two devices, Settings says so and lets you choose which one wins rather
 than silently picking.
 
+**Signing in again:** Google's browser sign-in lasts about an hour and can't be
+renewed unattended, so by the end of a workout it has usually lapsed. Saving the
+workout renews it — that tap is what lets the app ask — and Google normally
+settles it without asking anything, since you've already granted access. If
+you're offline it doesn't try, and the backup waits for signal instead.
+
 ---
 
 ## Design decisions

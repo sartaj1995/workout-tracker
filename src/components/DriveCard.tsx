@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { driveConfigured } from '../lib/drive'
+import { NEEDS_SIGN_IN, driveConfigured, primeToken } from '../lib/drive'
 import { useStore } from '../lib/store'
 import { backUp, disconnect, loadSync, restore, type SyncRecord } from '../lib/sync'
 import { Icon } from './Icon'
@@ -36,6 +36,7 @@ export function DriveCard() {
   }
 
   async function runBackup(force = false, interactive = false) {
+    if (interactive) primeToken()
     setBusy('backup')
     setError(null)
     setMessage(null)
@@ -80,7 +81,11 @@ export function DriveCard() {
             {sync.lastError && !sync.conflict ? (
               <div className="banner">
                 <Icon name="alert" size={16} />
-                <span>Last backup didn't go through: {sync.lastError}</span>
+                <span>
+                  {sync.lastError === NEEDS_SIGN_IN
+                    ? "Google's sign-in lasts an hour, and this one has run out. Back up now renews it and sends the last workout up."
+                    : `Last backup didn't go through: ${sync.lastError}`}
+                </span>
               </div>
             ) : null}
 
