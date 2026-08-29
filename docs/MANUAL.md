@@ -130,8 +130,17 @@ pick would quietly override the order you just wrote.
 **Rest alerts fire from the audio clock.** The beep is scheduled when rest
 *starts* rather than played when a timer notices zero — a backgrounded page has
 its timers throttled to the point of never firing. The screen is also held awake
-while a workout is open (**Settings → Keep screen on**), which is the real
-reason an alert gets missed.
+while a workout is open (**Settings → Keep screen on**).
+
+That alone wasn't enough, because the audio clock has a way of stopping too. A
+context with nothing playing is suspended the moment the page goes to the
+background, and its clock stops with it — so the beep waiting on that clock
+either arrives late by however long the phone was away, or never arrives. Two
+things now hold it together: a tone far too low and too quiet to hear plays for
+the length of each rest, which is enough to keep the context running; and on
+coming back to the app the two clocks are compared, so any time the audio clock
+slept through is corrected for. If rest is already over by then it sounds
+straight away, which is worse than on time and much better than never.
 
 **Empty days.** A heading with nothing under it is a day you haven't filled in
 yet. It shows on the home screen as *Not set up yet* and can't be started —
