@@ -78,7 +78,29 @@ function loadGis(): Promise<GoogleGis> {
   return gisLoading
 }
 
+/**
+ * Fetch Google's sign-in library ahead of time.
+ *
+ * A sign-in popup is only allowed while the browser still considers your tap
+ * recent — a few seconds. Downloading a script inside that window can eat all
+ * of it, and the popup is then blocked rather than shown. So the library is
+ * pulled in on app open, and the tap that matters finds it already there.
+ */
+export function warmUp(): void {
+  if (!CLIENT_ID) return
+  void loadGis().catch(() => {
+    // Offline, most likely. The next real attempt will try again.
+  })
+}
+
 const TOKEN_KEY = 'workout-tracker/drive-token'
+/**
+ * That consent has been given at some point. Deliberately separate from the
+ * token: the token is dropped whenever it expires or Drive rejects it, and
+ * losing the fact of the grant along with it means asking for the full consent
+ * screen again when a quiet re-issue would have done.
+ */
+const GRANT_KEY = 'workout-tracker/drive-granted'
 
 let accessToken: string | null = null
 let expiresAt = 0
@@ -101,8 +123,12 @@ function remember(token: string | null, expiry: number): void {
   accessToken = token
   expiresAt = expiry
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, JSON.stringify({ token, expiresAt: expiry }))
-    else localStorage.removeItem(TOKEN_KEY)
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, JSON.stringify({ token, expiresAt: expiry }))
+      localStorage.setItem(GRANT_KEY, '1')
+    } else {
+      localStorage.removeItem(TOKEN_KEY)
+    }
   } catch {
     // In-memory only for this session, which is still useful.
   }
@@ -116,24 +142,17 @@ export function hasLiveToken(): boolean {
 export const NEEDS_SIGN_IN = 'Google sign-in needed.'
 
 /**
- * Only an `interactive` call — one made from a tap — may reach Google. A stored
- * token is reused either way, so a backup owed from the gym can still go up on
- * its own once you're home, as long as it's within the token's hour.
+ * One token request at a time. Two callers wanting a token moments apart —
+ * the tap that primes it and the backup that follows — must not raise two
+ * sign-in windows.
  */
-export async function authorise(interactive: boolean): Promise<string> {
-  if (!CLIENT_ID) throw new Error('Google Drive is not configured for this build.')
-  if (hasLiveToken()) return accessToken as string
+let pending: Promise<string> | null = null
 
-  // Google's token request can raise a sign-in popup even when asked to stay
-  // quiet. A popup nobody asked for — on app open, say — is worse than a
-  // backup that waits, so background callers stop here and the UI offers a
-  // button instead.
-  if (!interactive) throw new Error(NEEDS_SIGN_IN)
-
-  const gis = await loadGis()
-  return new Promise<string>((resolve, reject) => {
+function requestToken(gis: GoogleGis, clientId: string): Promise<string> {
+  if (pending) return pending
+  pending = new Promise<string>((resolve, reject) => {
     const client = gis.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
+      client_id: clientId,
       scope: SCOPE,
       callback: (response) => {
         if (response.error || !response.access_token) {
@@ -154,13 +173,59 @@ export async function authorise(interactive: boolean): Promise<string> {
       },
     })
     client.requestAccessToken({ prompt: hasEverGranted() ? '' : 'consent' })
+  }).finally(() => {
+    pending = null
   })
+  return pending
+}
+
+/**
+ * Renew the token from inside a tap handler, for the backup that follows.
+ *
+ * Safari only opens a sign-in window from the handler itself — not from an
+ * await that settles a moment later — so the request has to be started here
+ * rather than left to the backup. Everything that would make a window appear
+ * out of nowhere is refused: no grant yet, no library loaded yet, offline. In
+ * those cases the backup's own attempt is the fallback.
+ *
+ * Fire-and-forget by design. Whatever it achieves, `authorise` picks up: a
+ * fresh token, the same in-flight request, or nothing.
+ */
+export function primeToken(): void {
+  if (!CLIENT_ID || hasLiveToken() || pending) return
+  if (navigator.onLine === false || !hasEverGranted()) return
+  const gis = window.google
+  if (!gis?.accounts?.oauth2) return
+  requestToken(gis, CLIENT_ID).catch(() => {
+    // The caller's backup reports the failure; this is only a head start.
+  })
+}
+
+/**
+ * Only an `interactive` call — one made from a tap — may reach Google. A stored
+ * token is reused either way, so a backup owed from the gym can still go up on
+ * its own once you're home, as long as it's within the token's hour.
+ */
+export async function authorise(interactive: boolean): Promise<string> {
+  if (!CLIENT_ID) throw new Error('Google Drive is not configured for this build.')
+  if (hasLiveToken()) return accessToken as string
+
+  // Google's token request can raise a sign-in popup even when asked to stay
+  // quiet. A popup nobody asked for — on app open, say — is worse than a
+  // backup that waits, so background callers stop here and the UI offers a
+  // button instead.
+  if (!interactive) throw new Error(NEEDS_SIGN_IN)
+
+  const gis = await loadGis()
+  return requestToken(gis, CLIENT_ID)
 }
 
 /** A previous grant means Google can usually reissue without a full prompt. */
 function hasEverGranted(): boolean {
   try {
-    return localStorage.getItem(TOKEN_KEY) !== null
+    // The token key is the fallback for devices that connected before the
+    // grant was recorded on its own.
+    return localStorage.getItem(GRANT_KEY) !== null || localStorage.getItem(TOKEN_KEY) !== null
   } catch {
     return false
   }
@@ -169,6 +234,12 @@ function hasEverGranted(): boolean {
 export function forgetToken(): void {
   const token = accessToken
   remember(null, 0)
+  try {
+    // Disconnecting is the one place the grant really is being given up.
+    localStorage.removeItem(GRANT_KEY)
+  } catch {
+    // Nothing to clear.
+  }
   if (token) window.google?.accounts.oauth2.revoke(token)
 }
 

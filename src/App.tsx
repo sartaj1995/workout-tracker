@@ -8,6 +8,7 @@ import { RestBar } from './components/RestBar'
 import { SessionView } from './components/SessionView'
 import { SettingsView } from './components/SettingsView'
 import { useStore } from './lib/store'
+import { warmUp } from './lib/drive'
 import { backUp, loadSync, markPending } from './lib/sync'
 import { useBackupRetry } from './lib/useBackupRetry'
 import { useRestTimer } from './lib/useRestTimer'
@@ -41,9 +42,22 @@ export function App() {
   const [view, setView] = useState<View>('tabs')
   const [day, setDay] = useState<DayId>('push')
 
+  // Google's browser sign-in hands out an access token good for about an hour
+  // and no way to renew it unattended, so most workouts finish with a dead one.
+  // Loading the library up front means the tap below still has time to use it.
+  useEffect(() => {
+    if (loadSync().connected) warmUp()
+  }, [])
+
   // A saved workout is the moment worth protecting, so record the debt first
   // and then try to push it. Recording first matters: the attempt is usually
   // made in a gym with no signal, and the debt is what gets it retried later.
+  //
+  // The push is interactive because "Save workout" was a tap moments ago, and
+  // that is the whole reason this can ask Google for a fresh token when the old
+  // one has expired. Nothing shows if the token is still good. Offline it would
+  // only be a sign-in window that fails, so there it stays quiet and waits for
+  // the retry.
   const savedCount = store.state.sessions.length
   const lastSeenCount = useRef(savedCount)
   useEffect(() => {
@@ -54,7 +68,7 @@ export function App() {
     lastSeenCount.current = savedCount
     if (!loadSync().connected) return
     markPending()
-    void backUp(store.state)
+    void backUp(store.state, { interactive: navigator.onLine !== false })
   }, [savedCount, store.state])
 
   useBackupRetry(store.state)
