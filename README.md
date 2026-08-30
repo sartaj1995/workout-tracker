@@ -6,7 +6,7 @@
 
 **Your gym notes, turned into an app you keep on your home screen.**
 
-Push / Pull / Legs sessions that open with last time's weights already filled in.
+Workout sessions that open with last time's weights already filled in.
 No account, no server, no signal required.
 
 <a href="https://workout-tracker-ssd.vercel.app/"><img src="https://img.shields.io/badge/Try_it_live-0b0f14?style=for-the-badge&logo=vercel&logoColor=white" alt="Try it live"></a>
@@ -14,9 +14,9 @@ No account, no server, no signal required.
 
 <br>
 
-![React 19](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?style=flat-square&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite&logoColor=white)
+![React v19](https://img.shields.io/badge/React-v19-149eca?style=flat-square&logo=react&logoColor=white)
+![TypeScript v6](https://img.shields.io/badge/TypeScript-v6-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![Vite v8](https://img.shields.io/badge/Vite-v8-646cff?style=flat-square&logo=vite&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-offline_first-5a0fc8?style=flat-square)
 ![Backend](https://img.shields.io/badge/backend-none-2ea043?style=flat-square)
 ![Vibe coded](https://img.shields.io/badge/vibe_coded-with_Claude_Code-d97757?style=flat-square)
@@ -141,9 +141,9 @@ offered, but its past sessions and chart still render.
 ## Vibe coded, on purpose
 
 Every line of this app was written by [Claude Code](https://claude.com/claude-code).
-Not scaffolded by it, not autocompleted by it — written by it, across 11 pull
-requests in two days, from one person describing what they wanted in the gym
-and what annoyed them about the last version.
+Not scaffolded by it, not autocompleted by it — written by it, a pull request at
+a time over a handful of days, from one person describing what they wanted in
+the gym and what annoyed them about the last version.
 
 The human contribution was the taste. This app exists because every workout
 tracker on the store wanted an account and a subscription to do something a
@@ -151,7 +151,7 @@ paper notebook already does better. So the prompts were things like *"the
 numbers should already be there"* and *"a fresh phone must never overwrite the
 backup"* — decisions about behaviour, not instructions about code.
 
-It's an honest look at where that gets you: roughly 3,400 lines of
+It's an honest look at where that gets you: about four thousand lines of
 TypeScript with two runtime dependencies (React and React DOM), no component
 library, no state library, no test suite, and a hand-rolled service worker. It's
 also unapologetically single-user software — built for one routine, one phone,
