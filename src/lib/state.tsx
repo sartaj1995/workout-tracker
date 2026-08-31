@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cloneSet, emptySet, isLogged, isTouched, score, topScore } from './calc'
 import { pickKey, resolveDay } from './plan'
 import { StoreCtx, type Store } from './store'
-import { loadState, mergeFromNotes, saveState } from './storage'
+import { freshState, loadState, mergeFromNotes, saveState } from './storage'
 import type { AppState, ExerciseDef, Session, WorkSet } from './types'
 
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -19,6 +19,40 @@ function startingSets(state: AppState, def: ExerciseDef): WorkSet[] {
     ...emptySet(),
     drops: (seed?.[i]?.drops ?? []).map(() => ({ weight: null, reps: null })),
   }))
+}
+
+/**
+ * Point each named exercise's prefill at the newest session that still holds
+ * it.
+ *
+ * A seed is only ever "whatever the latest session said", so correcting a
+ * saved number has to move it — otherwise next week's ghosts still show the
+ * mistake, and accepting them writes it straight back in. Limited to the
+ * exercises an edit could have touched; one with no sessions left keeps the
+ * seed it has, which is its starting number from the notes.
+ */
+function reseed(state: AppState, ids: string[]): Record<string, WorkSet[]> {
+  const when = (s: Session) => s.finishedAt ?? s.startedAt
+  const newestFirst = [...state.sessions].sort((a, b) => when(b) - when(a))
+  const seeds = { ...state.seeds }
+  let fromNotes: Record<string, WorkSet[]> | null = null
+
+  for (const id of new Set(ids)) {
+    const entry = newestFirst
+      .find((s) => s.entries.some((e) => e.exerciseId === id))
+      ?.entries.find((e) => e.exerciseId === id)
+    if (entry) {
+      seeds[id] = entry.sets.map(cloneSet)
+      continue
+    }
+    // Nothing left in history for it. Fall back to the starting numbers in the
+    // notes, so deleting a workout logged by mistake genuinely undoes it
+    // rather than leaving its numbers behind as next session's ghosts.
+    fromNotes ??= freshState().seeds
+    if (fromNotes[id]) seeds[id] = fromNotes[id]
+    else delete seeds[id]
+  }
+  return seeds
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
@@ -69,17 +103,61 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       discardSession: () => update((s) => ({ ...s, active: null })),
 
-      finishSession: () =>
+      finishSession: (note) =>
         update((s) => {
           if (!s.active) return s
           const entries = s.active.entries
             .map((e) => ({ ...e, sets: e.sets.filter((set) => isLogged(set, defs[e.exerciseId])) }))
             .filter((e) => e.sets.length > 0)
           if (entries.length === 0) return { ...s, active: null }
-          const done: Session = { ...s.active, entries, finishedAt: Date.now() }
+          const done: Session = {
+            ...s.active,
+            entries,
+            finishedAt: Date.now(),
+            note: note?.trim() || undefined,
+          }
           const seeds = { ...s.seeds }
           for (const e of entries) seeds[e.exerciseId] = e.sets.map(cloneSet)
           return { ...s, active: null, seeds, sessions: [done, ...s.sessions] }
+        }),
+
+      /**
+       * Commit an edited copy of a saved workout.
+       *
+       * Takes the whole session rather than a patch per field: the editor
+       * works on a draft, so Cancel is simply not calling this, and one
+       * cleaning pass covers however much was changed. Sets left without a
+       * number are dropped exactly as they are when a workout is first saved,
+       * and a session emptied of everything is a session being deleted.
+       */
+      saveSession: (edited) =>
+        update((s) => {
+          const before = s.sessions.find((x) => x.id === edited.id)
+          if (!before) return s
+          const entries = edited.entries
+            .map((e) => ({ ...e, sets: e.sets.filter((set) => isLogged(set, defs[e.exerciseId])) }))
+            .filter((e) => e.sets.length > 0)
+          const touched = [
+            ...before.entries.map((e) => e.exerciseId),
+            ...entries.map((e) => e.exerciseId),
+          ]
+          const sessions =
+            entries.length === 0
+              ? s.sessions.filter((x) => x.id !== edited.id)
+              : s.sessions.map((x) => (x.id === edited.id ? { ...edited, entries } : x))
+          return { ...s, sessions, seeds: reseed({ ...s, sessions }, touched) }
+        }),
+
+      deleteSession: (id) =>
+        update((s) => {
+          const gone = s.sessions.find((x) => x.id === id)
+          if (!gone) return s
+          const sessions = s.sessions.filter((x) => x.id !== id)
+          return {
+            ...s,
+            sessions,
+            seeds: reseed({ ...s, sessions }, gone.entries.map((e) => e.exerciseId)),
+          }
         }),
 
       patchSet: (exerciseId, index, patch) =>

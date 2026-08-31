@@ -54,6 +54,12 @@ export interface Session {
   startedAt: number
   finishedAt?: number
   entries: LoggedExercise[]
+  /**
+   * How it went, in your words — slept badly, shoulder twinged, felt strong.
+   * Distinct from an exercise's note, which is a standing setup reminder;
+   * this one belongs to the day and explains a dip in a chart months later.
+   */
+  note?: string
 }
 
 /**

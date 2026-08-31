@@ -1230,6 +1230,46 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
+/* A logged line you can go back into. Reads as text until you reach for it. */
+.log-line--edit {
+  width: 100%;
+  text-align: left;
+  background: none;
+  color: inherit;
+}
+
+.log-line--edit svg {
+  flex: none;
+  color: var(--muted);
+  opacity: 0.55;
+}
+
+.log-line--edit:active {
+  background: var(--surface-2);
+}
+
+.session-note {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-start;
+  width: 100%;
+  margin-top: var(--s-2);
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  line-height: 1.45;
+}
+
+.session-note svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
 /* ============ settings ============ */
 
 .setting {
