@@ -5,6 +5,7 @@ notes format, backups, and the handful of design decisions that explain why the
 app behaves the way it does.
 
 - [Writing your notes](#writing-your-notes)
+- [How progress is scored](#how-progress-is-scored)
 - [Backups](#backups)
 - [Backing up to Google Drive](#backing-up-to-google-drive)
 - [Design decisions](#design-decisions)
@@ -46,6 +47,48 @@ alone either way.
 Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
+
+---
+
+## How progress is scored
+
+Every exercise gets one number per session — its *score* — and that's what the
+Progress tab charts. The score is always taken from the **single best set** of
+that exercise in that session, never a sum or an average, so adding a fourth set
+doesn't move the curve unless it was your hardest.
+
+What "best" means depends on how the exercise is measured:
+
+| Metric | Example | Score | Chart label |
+| --- | --- | --- | --- |
+| `weight_reps` | `80x9` | `weight × (1 + reps / 30)` — Epley | est. 1RM (kg) |
+| `reps` | pull-ups | best rep count | best set |
+| `time` | wall sit | best hold in seconds | best hold |
+| `weight_time` | farmer's carry | `weight × seconds` | best hold |
+
+The percentage beside the chart compares the first session on record with the
+latest — not with your best — so a deliberate deload shows as a dip rather than
+being hidden.
+
+**On Epley.** It assumes a weight you can move for 9 reps sits about 30% below
+your true single. It's reasonable between 1 and 10 reps and increasingly
+optimistic above that; at 20 reps it claims `weight × 1.67`. It's also slightly
+wrong at the bottom — a true single scores `weight × 1.033`, not `weight`. None
+of this matters much for tracking yourself over time, because the bias is
+consistent: the curve's shape is trustworthy even where its absolute value
+isn't. Don't read the number as a weight to load on a bar.
+
+**Drop sets are excluded.** `70x8+55x3+45x3` scores identically to `70x8`. The
+drops are accumulated fatigue rather than evidence of a higher ceiling, so
+counting them would inflate the estimate on exactly the sessions where you were
+most tired. They *are* counted in session volume, which is what History totals.
+
+**Plate-numbered machines** still run through Epley, and the axis reads
+`est. 1RM (plate)`. Since the input is a plate index rather than kilos, the
+output is only meaningful compared against itself on that same machine.
+
+An exercise appears in the Progress picker as soon as it has one saved session,
+but the curve only says anything from the second onwards.
 
 ---
 
