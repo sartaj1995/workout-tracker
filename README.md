@@ -77,6 +77,39 @@ at all.
 
 ---
 
+## Reading the progress chart
+
+The **Progress** tab plots one number per session, labelled *est. 1RM* — an
+estimate of the heaviest single rep you could manage, worked out from a set you
+actually did. You never have to attempt a true max to get it.
+
+It uses the Epley formula, on your best set of that exercise that session:
+
+```
+est. 1RM  =  weight × (1 + reps / 30)
+```
+
+So `80x9` scores `80 × (1 + 9/30)` = **104 kg**. The point is comparability: it
+turns `3×10 at 60 kg` and `1×5 at 85 kg` into one number, so the curve tells you
+whether you're getting stronger without you having to eyeball weight and reps
+separately.
+
+Three things to know before you read too much into it:
+
+- **It's your best set, not your workload.** Six hard sets and one hard set score
+  the same if the top set matches. Total volume is shown per session in History.
+- **Drop sets don't raise it.** `70x8+55x3+45x3` scores exactly like `70x8` — the
+  drops are fatigue work, not a new strength ceiling. They do count towards volume.
+- **It drifts optimistic above ~10 reps.** A 20-rep set estimates at `weight ×
+  1.67`, which almost nobody could actually lift. The bias is consistent, so the
+  *shape* of your curve stays honest even where the absolute number isn't.
+
+Exercises measured in reps or seconds skip the formula entirely and chart *best
+set* or *best hold* instead. The [manual](docs/MANUAL.md#how-progress-is-scored)
+has the per-exercise details.
+
+---
+
 ## Make it yours
 
 The live demo above runs on one person's routine. The app has no sign-up because
