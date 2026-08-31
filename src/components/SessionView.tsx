@@ -16,6 +16,7 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
   const session = store.state.active
   const [showExtras, setShowExtras] = useState(false)
   const [confirmFinish, setConfirmFinish] = useState(false)
+  const [note, setNote] = useState('')
   const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
@@ -117,6 +118,14 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
 {plural(loggedSets, 'set')} logged. Unchecked sets are dropped, and today's numbers become the
             starting point for next time.
           </p>
+          {/* Offered here because this is the only moment you still remember
+              how it went. Optional, and editable later from History. */}
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="How did it go? Optional — slept badly, shoulder twinged, felt strong."
+            style={{ minHeight: 62 }}
+          />
           <div className="row" style={{ marginTop: 6 }}>
             <button className="btn ghost" onClick={() => setConfirmFinish(false)}>
               Keep going
@@ -129,7 +138,7 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
                 // the backup that follows needs a live Google token, and the
                 // old one has almost certainly expired during the workout.
                 primeToken()
-                store.finishSession()
+                store.finishSession(note)
                 rest.stop()
                 setConfirmFinish(false)
                 onExit()

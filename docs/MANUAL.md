@@ -5,6 +5,7 @@ notes format, backups, and the handful of design decisions that explain why the
 app behaves the way it does.
 
 - [Writing your notes](#writing-your-notes)
+- [Fixing a saved workout](#fixing-a-saved-workout)
 - [How progress is scored](#how-progress-is-scored)
 - [Backups](#backups)
 - [Backing up to Google Drive](#backing-up-to-google-drive)
@@ -47,6 +48,29 @@ alone either way.
 Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
+
+---
+
+## Fixing a saved workout
+
+Open **History**, tap a workout to expand it, then tap any exercise line. You
+can correct a number you mistyped, add the set you forgot to tick off, remove
+an exercise from that day, or delete the workout outright. Clearing a set's
+numbers removes the set; removing the last exercise removes the workout.
+
+The prefill follows the correction. A seed — the ghost numbers you see next
+session — is only ever "whatever the latest session said", so fixing a wrong
+number moves it too. Otherwise next week's ghosts would still show the mistake,
+and accepting them would write it straight back in. Correcting an *older*
+session leaves the seed alone, because a newer one still has the last word, and
+deleting the only session an exercise appears in puts its seed back to the
+starting numbers in your notes.
+
+Each workout also carries a **note** of its own — how you slept, what hurt,
+what to change next time. It's offered when you save the workout, since that's
+the only moment you still remember, and it can be added or edited here later.
+That's separate from an exercise's note, which is a standing setup reminder
+that shows every time you train it.
 
 ---
 

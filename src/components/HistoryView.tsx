@@ -4,6 +4,7 @@ import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
 import type { Activity, Session } from '../lib/types'
 import { DAYS } from '../data/parse'
+import { ConfirmDeleteSession, EditExercise, EditSessionNote } from './EditSession'
 import { Icon } from './Icon'
 
 export function HistoryView() {
@@ -95,6 +96,9 @@ function SessionCard({
   onToggle: () => void
 }) {
   const store = useStore()
+  const [editing, setEditing] = useState<string | null>(null)
+  const [noting, setNoting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const label = DAYS.find((d) => d.id === session.day)?.label ?? session.day
   const sets = session.entries.reduce((n, e) => n + e.sets.length, 0)
   const mins = session.finishedAt
@@ -125,23 +129,54 @@ function SessionCard({
 
       {open ? (
         <div style={{ marginTop: 10 }}>
+          {/* Every line is a way in: the reason to open a saved workout is
+              nearly always one number that went in wrong. */}
           {session.entries.map((e) => {
             const def = store.defs[e.exerciseId]
             if (!def) return null
             return (
-              <div className="log-line" key={e.exerciseId}>
+              <button
+                className="log-line log-line--edit"
+                key={e.exerciseId}
+                onClick={() => setEditing(e.exerciseId)}
+              >
                 <span className="n">{def.name}</span>
                 <span className="v">{formatSets(e.sets, def)}</span>
-              </div>
+                <Icon name="pencil" size={13} />
+              </button>
             )
           })}
-          {mins !== null ? (
-            <div className="tiny muted" style={{ marginTop: 8 }}>
-              Duration{' '}
-              {formatClock(Math.round(((session.finishedAt ?? 0) - session.startedAt) / 1000))}
-            </div>
-          ) : null}
+
+          <button className="session-note" onClick={() => setNoting(true)}>
+            <Icon name="pin" size={14} />
+            <span>{session.note ?? 'Add a note about this workout'}</span>
+          </button>
+
+          <div className="ex-actions" style={{ paddingLeft: 0, marginTop: 4 }}>
+            {mins !== null ? (
+              <span className="tiny muted" style={{ alignSelf: 'center' }}>
+                Duration{' '}
+                {formatClock(Math.round(((session.finishedAt ?? 0) - session.startedAt) / 1000))}
+              </span>
+            ) : null}
+            <div className="spacer" />
+            <button className="chip" onClick={() => setDeleting(true)}>
+              <Icon name="trash" size={14} /> delete workout
+            </button>
+          </div>
         </div>
+      ) : null}
+
+      {editing && store.defs[editing] ? (
+        <EditExercise
+          session={session}
+          def={store.defs[editing]}
+          onClose={() => setEditing(null)}
+        />
+      ) : null}
+      {noting ? <EditSessionNote session={session} onClose={() => setNoting(false)} /> : null}
+      {deleting ? (
+        <ConfirmDeleteSession session={session} label={label} onClose={() => setDeleting(false)} />
       ) : null}
     </div>
   )

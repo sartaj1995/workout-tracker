@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { AppState, DayId, ExerciseDef, Prefs, WorkSet } from './types'
+import type { AppState, DayId, ExerciseDef, Prefs, Session, WorkSet } from './types'
 
 export interface Store {
   state: AppState
@@ -7,7 +7,10 @@ export interface Store {
   update: (fn: (s: AppState) => AppState) => void
   startSession: (day: DayId) => void
   discardSession: () => void
-  finishSession: () => void
+  finishSession: (note?: string) => void
+  /** Replace a saved workout with an edited copy of it, and re-seed from it. */
+  saveSession: (session: Session) => void
+  deleteSession: (id: string) => void
   patchSet: (exerciseId: string, index: number, patch: Partial<WorkSet>) => void
   addSet: (exerciseId: string) => void
   removeSet: (exerciseId: string, index: number) => void
