@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatSets, isLogged, plural, score, suggestion, unitLabel } from '../lib/calc'
+import { formatSets, isLogged, isStalled, plural, score, sessionsSinceBest, suggestion, unitLabel } from '../lib/calc'
 import { useStore } from '../lib/store'
 import type { DayId, ExerciseDef, WorkSet } from '../lib/types'
 import { Icon } from './Icon'
@@ -44,6 +44,10 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
   const best = store.bestEver(def.id)
   const hitPR = best > 0 && sets.some((s) => s.done && score(s, def) > best)
   const tip = suggestion(prev[0], def, store.state.prefs)
+  // Worth knowing while you can still do something about it — before you load
+  // the same weight you've loaded the last five times without thinking.
+  const history = store.historyFor(def.id)
+  const stalled = isStalled(history)
 
   const unit = unitLabel(def)
   const showWeight = def.metric === 'weight_reps' || def.metric === 'weight_time'
@@ -226,6 +230,12 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
         {hitPR ? (
           <span className="chip pr">
             <Icon name="trophy" size={14} /> new best
+          </span>
+        ) : null}
+        {stalled && !hitPR ? (
+          <span className="chip stalled">
+            <Icon name="alert" size={14} /> {plural(sessionsSinceBest(history), 'session')} since your
+            best
           </span>
         ) : null}
         {!def.note ? (

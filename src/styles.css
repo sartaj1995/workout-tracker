@@ -674,6 +674,58 @@ textarea {
   font-weight: 600;
 }
 
+/* Not an error and not a win — a nudge, so it borrows the warning colour
+   without the weight of the PR chip next to it. */
+.chip.stalled {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  color: color-mix(in srgb, var(--warn) 78%, var(--text));
+}
+
+.stall-row {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  width: 100%;
+  padding: 11px var(--s-3);
+  background: none;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  color: color-mix(in srgb, var(--warn) 80%, var(--text));
+}
+
+.stall-row:last-child {
+  border-bottom: none;
+}
+
+.stall-row:active {
+  background: var(--surface-2);
+}
+
+.stall-row__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.stall-row__name {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stall-row__meta {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.stall-row > svg:last-child {
+  flex: none;
+  color: var(--muted);
+}
+
 .note {
   display: flex;
   gap: var(--s-2);
