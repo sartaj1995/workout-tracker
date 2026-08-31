@@ -7,6 +7,8 @@ app behaves the way it does.
 - [Writing your notes](#writing-your-notes)
 - [Fixing a saved workout](#fixing-a-saved-workout)
 - [How progress is scored](#how-progress-is-scored)
+- [When a lift stops moving](#when-a-lift-stops-moving)
+- [Workload](#workload)
 - [Backups](#backups)
 - [Backing up to Google Drive](#backing-up-to-google-drive)
 - [Design decisions](#design-decisions)
@@ -113,6 +115,46 @@ output is only meaningful compared against itself on that same machine.
 
 An exercise appears in the Progress picker as soon as it has one saved session,
 but the curve only says anything from the second onwards.
+
+---
+
+## When a lift stops moving
+
+Every exercise is counted against its own best: **sessions since your best** is
+how many you've logged since the last time you beat it. Zero means the most
+recent session *was* the best one.
+
+Past four, the app says so — in the workout itself as a chip on the exercise
+card, and at the top of **Progress → Lifts** as a list of everything that has
+stopped going up, worst first. Four is low enough to catch a plateau while
+there's still something to do about it, and high enough that one ordinary week,
+or a session you went into tired, doesn't set it off.
+
+Progress also offers somewhere to restart from: about a tenth off the weight,
+rounded to a jump you can actually make. The point isn't the lighter weight —
+it's clearing the old number with room to spare, so the way past it comes with
+it. Nothing is offered for rep-only exercises, because there's no weight to come
+down to and telling you to do fewer pull-ups isn't a plan.
+
+Counting from the best, rather than from a rolling average, is deliberate: it's
+what progressive overload actually asks. Sooner or later the number has to go
+up again.
+
+---
+
+## Workload
+
+**Progress → Workload** adds up every kilo you moved in a session — weight ×
+reps across every set and drop set — and charts it over time, with the last four
+sessions compared against the four before them.
+
+**One day at a time, never all on one line.** A Legs session moves several times
+the tonnage of a Push one, so a combined chart would be a sawtooth that tracks
+which day it was rather than whether you're doing more.
+
+Only lifts measured in kilos count. Plate-numbered machines and timed holds are
+left out: their numbers aren't kilos, and adding them in would make the total
+mean nothing.
 
 ---
 

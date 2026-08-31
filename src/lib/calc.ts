@@ -88,6 +88,56 @@ export function suggestion(prev: WorkSet | undefined, def: ExerciseDef, prefs: P
   return null
 }
 
+/**
+ * How many sessions you've logged since this exercise last set its best.
+ *
+ * Zero means the latest session *was* the best one. Counted from the best
+ * rather than from a rolling average because that's what progressive overload
+ * actually asks: sooner or later the number has to go up again.
+ */
+export function sessionsSinceBest(history: { top: number }[]): number {
+  let best = -Infinity
+  let bestAt = 0
+  history.forEach((h, i) => {
+    if (h.top > best) {
+      best = h.top
+      bestAt = i
+    }
+  })
+  return history.length === 0 ? 0 : history.length - 1 - bestAt
+}
+
+/**
+ * Sessions without a new best before it's worth saying anything.
+ *
+ * Low enough to catch a plateau while there's still something to do about it,
+ * high enough that one ordinary week — or a session you went into tired —
+ * doesn't set it off.
+ */
+export const STALL_AFTER = 4
+
+export function isStalled(history: { top: number }[]): boolean {
+  return history.length > STALL_AFTER && sessionsSinceBest(history) >= STALL_AFTER
+}
+
+/**
+ * Somewhere lighter to restart from once a lift has stopped moving: about a
+ * tenth off, rounded to a jump you can actually make on the equipment.
+ *
+ * Nothing is offered for rep-only exercises — there's no weight to come down
+ * to, and telling someone to do fewer pull-ups isn't a plan.
+ */
+export function deload(def: ExerciseDef, prefs: Prefs, from: WorkSet | undefined): string | null {
+  if (!from) return null
+  const step = stepFor(def, prefs)
+  const cut = (v: number) => Math.max(step, Math.round((v * 0.9) / step) * step)
+  if (def.metric === 'time' || def.metric === 'weight_time') {
+    return from.seconds ? `${cut(from.seconds)}s` : null
+  }
+  if (def.metric === 'reps') return null
+  return from.weight ? `${round(cut(from.weight))} ${unitLabel(def)}` : null
+}
+
 export const round = (n: number): number => Math.round(n * 100) / 100
 
 /** Plates per side for a barbell lift. Returns null if it can't be made. */
