@@ -30,6 +30,9 @@ export interface Store {
   setNote: (exerciseId: string, note: string) => void
   setPrefs: (patch: Partial<Prefs>) => void
   reloadNotes: () => void
+  /** Adopt edited notes. `renames` maps a new name's slug to the id it keeps. */
+  saveNotes: (text: string, renames: Record<string, string>) => void
+  resetNotes: () => void
   replaceState: (next: AppState) => void
   bestEver: (exerciseId: string) => number
   historyFor: (exerciseId: string) => { at: number; top: number; sets: WorkSet[] }[]

@@ -5,6 +5,7 @@ notes format, backups, and the handful of design decisions that explain why the
 app behaves the way it does.
 
 - [Writing your notes](#writing-your-notes)
+- [Editing exercises in the app](#editing-exercises-in-the-app)
 - [Fixing a saved workout](#fixing-a-saved-workout)
 - [How progress is scored](#how-progress-is-scored)
 - [When a lift stops moving](#when-a-lift-stops-moving)
@@ -37,6 +38,8 @@ Dumbbell press - 30x10 25x11 25x10 25x9
 | A blank line inside a day | Everything below it is optional / extra |
 | `... (note)` after the sets | Becomes the exercise note |
 | A bare name, no ` - ` | Reuses an exercise from an earlier day |
+| `110s` / `20x45s` | A timed hold, or a carry — weight × seconds |
+| `plate` before the sets | The numbers are pin positions, not kilos |
 
 Machines numbered by plate rather than kilos, and lifts measured in reps or
 seconds instead of weight, are listed in `OVERRIDES` at the bottom of the same
@@ -50,6 +53,46 @@ alone either way.
 Removing an exercise from the notes *retires* it rather than deleting it: it
 stops being offered in new workouts, but past sessions and its progress chart
 still render.
+
+---
+
+## Editing exercises in the app
+
+**Settings → Edit exercises** opens the same notes in a text box. No deploy, no
+laptop — add a machine your gym just got while you're standing in front of it.
+
+**Your edits win from then on.** The notes in `src/data/notes.ts` are the
+starting point, not a standing instruction, so redeploying the app won't
+overwrite what you've written. The same screen has *Go back to the notes in the
+app build* if you want the file back in charge.
+
+### Renaming, and why it asks
+
+Exercise ids are made from names, so tidying `Chest sup row` into `Chest
+supported row` looks to the app like one exercise disappearing and an unrelated
+one arriving. Left alone, every session, chart, best and stall count would stay
+behind on a name you can no longer see, and the new one would start from zero.
+
+So anything that both appears and disappears in the same edit gets a question
+before the edit counts: *is this a rename, or something new?* Answer "renamed
+from" and the exercise keeps its id under the new name — history, chart, best,
+and how it's measured all come with it. The app pre-selects a guess when two
+names are close, but it only ever pre-selects; the confirmation is yours.
+
+### Removing
+
+Taking an exercise out of the notes **retires** it. It stops being offered in
+new workouts, and everything logged under it stays exactly where it is. Put the
+name back and it returns, history and all. Nothing you write in this box can
+delete a workout.
+
+### Before you save
+
+Under the box is a running count per day, which should match what the home
+screen says, plus warnings for lines that parsed to nothing — a name above the
+first day heading, a bare name that matches no earlier exercise, or the long
+dash a phone keyboard makes instead of ` - `. That's the part a deploy used to
+do for you.
 
 ---
 

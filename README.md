@@ -149,6 +149,8 @@ Cable crunch - 40x15 40x12
 | A blank line inside a day | Everything under it is optional / extra work |
 | `... (note)` after the sets | Becomes that exercise's note |
 | A bare name with no ` - ` | Reuses an exercise from an earlier day — same history |
+| `110s` or `20x45s` | A timed hold, or a carry measured in weight × seconds |
+| `plate` before the sets | The numbers are pin positions rather than kilos |
 
 Those starting numbers are just seeds; the app takes over from your first logged
 session. Machines numbered by plate, and lifts counted in reps or seconds
@@ -168,6 +170,12 @@ Edit your notes later and redeploy; the app fingerprints them, notices the chang
 and rebuilds its exercise list on its own. Everything you've logged is left
 untouched. Delete an exercise and it's *retired*, not erased — it stops being
 offered, but its past sessions and chart still render.
+
+Or skip the laptop entirely: **Settings → Edit exercises** opens the same notes
+in the app, so you can add a machine while standing in front of it. Your edits
+take over from the file at that point, and a redeploy won't overwrite them.
+Renaming an exercise asks whether it's the same one under a new name, because
+ids come from names and a silent rename would leave its history stranded.
 
 ---
 

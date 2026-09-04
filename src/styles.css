@@ -1426,6 +1426,65 @@ textarea {
   margin: 0 0 var(--s-3);
 }
 
+.sheet textarea.notes-input {
+  width: 100%;
+  min-height: 44vh;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  padding: 10px;
+  color: var(--text);
+  /* Monospace so the " - " separator and the columns of sets line up, which is
+     most of how you spot a line that won't parse. */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  resize: vertical;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}
+
+.notes-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: var(--s-2);
+  font-size: 12.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.notes-summary .muted {
+  color: var(--muted);
+}
+
+.rename-row {
+  display: grid;
+  gap: 5px;
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.rename-row:last-of-type {
+  border-bottom: none;
+}
+
+.rename-row__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.rename-row select {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13.5px;
+}
+
 .sheet textarea {
   width: 100%;
   min-height: 92px;

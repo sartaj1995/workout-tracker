@@ -3,6 +3,7 @@ import { plateBreakdown } from '../lib/calc'
 import { useStore } from '../lib/store'
 import { downloadBackup, freshState, readBackup } from '../lib/storage'
 import { DriveCard } from './DriveCard'
+import { NotesEditor } from './NotesEditor'
 import { Icon } from './Icon'
 import { NumberField, Toggle } from './ui'
 
@@ -12,6 +13,7 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [target, setTarget] = useState<number | null>(60)
   const [status, setStatus] = useState<string | null>(null)
+  const [editingNotes, setEditingNotes] = useState(false)
 
   const breakdown = target === null ? null : plateBreakdown(target, prefs.barWeight, prefs.plates)
 
@@ -176,6 +178,15 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
             e.target.value = ''
           }}
         />
+        <button className="btn block" style={{ marginTop: 8 }} onClick={() => setEditingNotes(true)}>
+          <Icon name="pencil" size={17} /> Edit exercises
+        </button>
+        {store.state.notes !== undefined ? (
+          <p className="tiny muted" style={{ marginBottom: 0 }}>
+            You're on notes you edited in the app. Deploying a new{' '}
+            <code>notes.ts</code> won't change them — Edit exercises can put you back on it.
+          </p>
+        ) : null}
         <button
           className="btn block"
           style={{ marginTop: 8 }}
@@ -208,6 +219,8 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
       <p className="tiny muted" style={{ textAlign: 'center' }}>
         {store.state.catalog.length} exercises · {store.state.sessions.length} saved workouts
       </p>
+
+      {editingNotes ? <NotesEditor onClose={() => setEditingNotes(false)} /> : null}
     </div>
   )
 }
