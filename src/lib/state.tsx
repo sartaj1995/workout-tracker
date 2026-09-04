@@ -271,6 +271,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           catalog: s.catalog.map((d) => (d.id === exerciseId ? { ...d, note: note.trim() || undefined } : d)),
         })),
 
+      setPerSide: (exerciseId, on) =>
+        update((s) => ({
+          ...s,
+          catalog: s.catalog.map((d) => (d.id === exerciseId ? { ...d, perSide: on } : d)),
+        })),
+
       setPrefs: (patch) => update((s) => ({ ...s, prefs: { ...s.prefs, ...patch } })),
 
       reloadNotes: () => update((s) => mergeFromNotes(s)),

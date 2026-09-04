@@ -37,6 +37,12 @@ export interface ExerciseDef {
   note?: string
   targetSets: number
   /**
+   * The logged weight is what's in one hand, and both sides get worked — two
+   * dumbbells, or one arm at a time with both arms logged as a single set.
+   * Only workload cares: it doubles, because that's what you actually moved.
+   */
+  perSide?: boolean
+  /**
    * Dropped from the notes but kept in the catalog, so past sessions and
    * charts that reference it still render. Never offered in a new workout.
    */

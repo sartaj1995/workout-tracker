@@ -25,7 +25,14 @@ export function topScore(sets: WorkSet[], def: ExerciseDef): number {
   return sets.reduce((m, s) => Math.max(m, score(s, def)), 0)
 }
 
-/** Total work done, including drop sets. */
+/**
+ * Total work done, including drop sets.
+ *
+ * A per-side exercise counts double. You write down what's in one hand, so a
+ * 30kg dumbbell press is 60kg leaving the chest on every rep — and unless both
+ * are counted, swapping the dumbbells for the machine in the same OR slot
+ * halves the day's workload without you having worked any less.
+ */
 export function volume(sets: WorkSet[], def: ExerciseDef): number {
   let total = 0
   for (const s of sets) {
@@ -38,7 +45,7 @@ export function volume(sets: WorkSet[], def: ExerciseDef): number {
       total += s.seconds ?? 0
     }
   }
-  return total
+  return def.perSide ? total * 2 : total
 }
 
 export function unitLabel(def: ExerciseDef): string {

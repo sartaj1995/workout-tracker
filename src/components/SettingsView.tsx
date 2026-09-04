@@ -4,6 +4,7 @@ import { useStore } from '../lib/store'
 import { downloadBackup, freshState, readBackup } from '../lib/storage'
 import { DriveCard } from './DriveCard'
 import { NotesEditor } from './NotesEditor'
+import { PerSideEditor } from './PerSideEditor'
 import { Icon } from './Icon'
 import { NumberField, Toggle } from './ui'
 
@@ -14,6 +15,7 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
   const [target, setTarget] = useState<number | null>(60)
   const [status, setStatus] = useState<string | null>(null)
   const [editingNotes, setEditingNotes] = useState(false)
+  const [editingPerSide, setEditingPerSide] = useState(false)
 
   const breakdown = target === null ? null : plateBreakdown(target, prefs.barWeight, prefs.plates)
 
@@ -181,6 +183,16 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
         <button className="btn block" style={{ marginTop: 8 }} onClick={() => setEditingNotes(true)}>
           <Icon name="pencil" size={17} /> Edit exercises
         </button>
+        <button
+          className="btn block"
+          style={{ marginTop: 8 }}
+          onClick={() => setEditingPerSide(true)}
+        >
+          <Icon name="layers" size={17} /> Which exercises count twice
+        </button>
+        <p className="tiny muted" style={{ marginBottom: 0 }}>
+          Dumbbell and one-arm work moves twice what you write down. Tell Workload which is which.
+        </p>
         {store.state.notes !== undefined ? (
           <p className="tiny muted" style={{ marginBottom: 0 }}>
             You're on notes you edited in the app. Deploying a new{' '}
@@ -221,6 +233,7 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
       </p>
 
       {editingNotes ? <NotesEditor onClose={() => setEditingNotes(false)} /> : null}
+      {editingPerSide ? <PerSideEditor onClose={() => setEditingPerSide(false)} /> : null}
     </div>
   )
 }

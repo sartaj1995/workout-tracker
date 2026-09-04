@@ -105,7 +105,10 @@ export function mergeFromNotes(state: AppState): AppState {
   const existing = new Map(state.catalog.map((d) => [d.id, d]))
   const catalog: ExerciseDef[] = defs.map((d) => {
     const prev = existing.get(d.id)
-    return prev ? { ...d, note: prev.note ?? d.note } : d
+    // Both of these are set in the app rather than in the notes, so they have
+    // to survive every rebuild or they'd be silently lost the next time the
+    // notes are edited.
+    return prev ? { ...d, note: prev.note ?? d.note, perSide: prev.perSide ?? d.perSide } : d
   })
   const dropped = state.catalog
     .filter((d) => !defs.some((n) => n.id === d.id))
