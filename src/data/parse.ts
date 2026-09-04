@@ -32,7 +32,7 @@ function parseToken(token: string, metric: Metric): WorkSet | null {
   if (parts.length === 0) return null
 
   const readPair = (p: string): { a: number | null; b: number | null } => {
-    const paired = /^(\d+(?:\.\d+)?)?x(\d+(?:\.\d+)?)?$/.exec(p)
+    const paired = /^(\d+(?:\.\d+)?)?x(\d+(?:\.\d+)?)?s?$/.exec(p)
     if (paired) return { a: num(paired[1]), b: num(paired[2]) }
     const bare = /^(\d+(?:\.\d+)?)s?$/.exec(p)
     if (bare) return { a: null, b: num(bare[1]) }
@@ -59,12 +59,31 @@ export interface ParsedNotes {
   defs: ExerciseDef[]
   seeds: Record<string, WorkSet[]>
   dayPlan: Record<string, DayPlanEntry[]>
+  /**
+   * Lines that parsed to nothing. Harmless when the notes ship with the build
+   * and you'd notice on the next deploy; worth saying out loud once they're
+   * edited on a phone, where a mistyped heading otherwise just loses exercises.
+   */
+  warnings: string[]
 }
 
-export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
+/**
+ * `renames` maps a name's slug onto the id an exercise should keep.
+ *
+ * Ids are slugs of names, so renaming an exercise would otherwise read as
+ * deleting one and creating another — severing every session, chart and best
+ * from it. Holding the original id keeps the history, the notes you've added
+ * and any entry in `OVERRIDES` attached to the exercise you actually meant.
+ */
+export function parseNotes(
+  raw: string = RAW_NOTES,
+  renames: Record<string, string> = {},
+): ParsedNotes {
   const defs: ExerciseDef[] = []
   const seeds: Record<string, WorkSet[]> = {}
   const dayPlan: Record<string, DayPlanEntry[]> = {}
+  const warnings: string[] = []
+  const idFor = (name: string) => renames[slugify(name)] ?? slugify(name)
   for (const d of DAYS) dayPlan[d.id] = []
 
   let day: DayId | null = null
@@ -95,7 +114,14 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
       continue
     }
 
-    if (!day) continue
+    if (!day) {
+      warnings.push(`"${text}" is above the first day heading, so nothing reads it.`)
+      continue
+    }
+
+    if (/\s[–—]\s/.test(text)) {
+      warnings.push(`"${text}" uses a dash your phone made. Sets need a plain " - ".`)
+    }
 
     const split = text.indexOf(' - ')
 
@@ -104,12 +130,16 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
     // it just also appears in this day's running order. Any OR alternatives it
     // already has come with it.
     if (split === -1) {
-      const refId = slugify(text)
+      const refId = idFor(text)
       if (defs.some((d) => d.id === refId)) {
         if (sawBlank) optional = true
         sawBlank = false
         pendingOr = false
         dayPlan[day].push({ id: refId, optional })
+      } else {
+        warnings.push(
+          `"${text}" was dropped — a line with no " - " reuses an exercise from an earlier day, and there isn't one by that name.`,
+        )
       }
       continue
     }
@@ -124,13 +154,27 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
       note = noteMatch[1].trim()
       rest = rest.slice(0, noteMatch.index).trim()
     }
+    // "plate" in front of the sets means the numbers are pin positions, not kg.
+    const plate = /^plate\s+/i.test(rest)
     rest = rest.replace(/^plate\s+/i, '')
 
-    const id = slugify(name)
+    const id = idFor(name)
     const override = OVERRIDES[id] ?? {}
     const tokens = rest.split(/\s+/).filter(Boolean)
-    const metric: Metric = override.metric ?? (tokens.some((t) => t.includes('x')) ? 'weight_reps' : 'reps')
-    const unit: Unit = override.unit ?? 'kg'
+    // A trailing "s" is how you'd write a hold anyway — "110s", or "20x60s"
+    // for a carry. OVERRIDES still wins where it has an entry, so notes
+    // written before this syntax existed keep reading the way they always did.
+    const hasWeight = tokens.some((t) => t.includes('x'))
+    const timed = tokens.length > 0 && tokens.every((t) => /s$/i.test(t.split('+')[0]))
+    const inferred: Metric = hasWeight
+      ? timed
+        ? 'weight_time'
+        : 'weight_reps'
+      : timed
+        ? 'time'
+        : 'reps'
+    const metric: Metric = override.metric ?? inferred
+    const unit: Unit = override.unit ?? (plate ? 'plate' : 'kg')
 
     const sets = tokens.map((t) => parseToken(t, metric)).filter((s): s is WorkSet => s !== null)
 
@@ -151,7 +195,7 @@ export function parseNotes(raw: string = RAW_NOTES): ParsedNotes {
     dayPlan[day].push({ id, optional })
   }
 
-  return { defs: stabiliseChoiceIds(defs), seeds, dayPlan }
+  return { defs: stabiliseChoiceIds(defs), seeds, dayPlan, warnings }
 }
 
 /**

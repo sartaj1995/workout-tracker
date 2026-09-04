@@ -275,6 +275,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       reloadNotes: () => update((s) => mergeFromNotes(s)),
 
+      /**
+       * Take on an edited copy of the notes.
+       *
+       * `renames` carries the answers to "is this the same exercise under a
+       * new name?", which is the only part of an edit that can't be undone by
+       * editing again — everything else is recoverable, but history left
+       * behind on an id you can no longer see is not.
+       */
+      saveNotes: (text, renames) =>
+        update((s) =>
+          mergeFromNotes({ ...s, notes: text, renames: { ...(s.renames ?? {}), ...renames } }),
+        ),
+
+      /** Back to the notes shipped in the build, keeping everything logged. */
+      resetNotes: () => update((s) => mergeFromNotes({ ...s, notes: undefined })),
+
       replaceState: (next) => setState(next),
 
       bestEver: (exerciseId) => {

@@ -101,6 +101,18 @@ export interface AppState {
   /** Fingerprint of the notes the catalog was built from. */
   notesHash: string
   /**
+   * Notes edited inside the app. Once this exists it is the source of truth —
+   * the copy shipped in the build stays as the starting point, and Settings
+   * can put you back on it.
+   */
+  notes?: string
+  /**
+   * Slug of a name -> the id the exercise keeps, recorded when you rename one.
+   * Ids are slugs, so without this a rename reads as a delete plus an add and
+   * takes the history with it.
+   */
+  renames?: Record<string, string>
+  /**
    * The running order of each day, built from the notes. Held separately from
    * the catalog because one exercise can appear on more than one day.
    */

@@ -29,6 +29,14 @@ export const DEFAULT_PREFS: Prefs = {
   repCeiling: 10,
 }
 
+/**
+ * The notes actually in force: yours once you've edited them, otherwise the
+ * ones shipped in the build.
+ */
+export function effectiveNotes(state: Pick<AppState, 'notes'>): string {
+  return state.notes ?? RAW_NOTES
+}
+
 export function freshState(): AppState {
   const { defs, seeds, dayPlan } = parseNotes()
   return {
@@ -66,8 +74,9 @@ export function loadState(): AppState {
       ),
       active: parsed.active ?? null,
     }
-    // dayPlan arrived after the first releases, so rebuild if it's missing.
-    const current = state.notesHash === base.notesHash && state.dayPlan
+    // Rebuild when the notes in force have moved on — which is a redeploy of
+    // notes.ts if you've never edited them, and nothing at all once you have.
+    const current = state.notesHash === hashNotes(effectiveNotes(state)) && state.dayPlan
     return current ? state : mergeFromNotes(state)
   } catch {
     return freshState()
@@ -91,7 +100,8 @@ export function saveState(state: AppState): void {
  * stop being offered in new workouts.
  */
 export function mergeFromNotes(state: AppState): AppState {
-  const { defs, seeds, dayPlan } = parseNotes()
+  const raw = effectiveNotes(state)
+  const { defs, seeds, dayPlan } = parseNotes(raw, state.renames ?? {})
   const existing = new Map(state.catalog.map((d) => [d.id, d]))
   const catalog: ExerciseDef[] = defs.map((d) => {
     const prev = existing.get(d.id)
@@ -103,7 +113,7 @@ export function mergeFromNotes(state: AppState): AppState {
   const mergedSeeds: Record<string, WorkSet[]> = { ...seeds, ...state.seeds }
   return {
     ...state,
-    notesHash: hashNotes(RAW_NOTES),
+    notesHash: hashNotes(raw),
     dayPlan,
     catalog: [...catalog, ...dropped],
     seeds: mergedSeeds,
@@ -142,5 +152,8 @@ export function readBackupText(text: string): AppState {
     activities: parsed.activities ?? [],
   } as AppState
   // A backup taken before a notes edit still lands on the current exercises.
-  return state.notesHash === base.notesHash && state.dayPlan ? state : mergeFromNotes(state)
+  // The backup carries its own notes, so restoring one restores those too.
+  return state.notesHash === hashNotes(effectiveNotes(state)) && state.dayPlan
+    ? state
+    : mergeFromNotes(state)
 }
