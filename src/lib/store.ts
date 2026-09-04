@@ -28,6 +28,8 @@ export interface Store {
   addActivity: (name: string, at: number, minutes?: number) => void
   removeActivity: (id: string) => void
   setNote: (exerciseId: string, note: string) => void
+  /** Mark an exercise as counting double towards workload. */
+  setPerSide: (exerciseId: string, on: boolean) => void
   setPrefs: (patch: Partial<Prefs>) => void
   reloadNotes: () => void
   /** Adopt edited notes. `renames` maps a new name's slug to the id it keeps. */

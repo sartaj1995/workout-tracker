@@ -199,6 +199,26 @@ Only lifts measured in kilos count. Plate-numbered machines and timed holds are
 left out: their numbers aren't kilos, and adding them in would make the total
 mean nothing.
 
+**Dumbbell and one-arm work counts twice.** You write down what's in one hand,
+so a 30 kg dumbbell press moves 60 kg on every rep. Without counting both, the
+same slot swings wildly for no reason — 3 sets of dumbbell press read 825 kg
+against 2,005 kg for the machine press it alternates with, which says nothing
+about how hard either was.
+
+Which exercises those are isn't guessable from a name, so **Settings → Which
+exercises count twice** asks. Tick anything where the number is per hand and
+both sides get worked: two dumbbells, or one arm at a time logged as a single
+set. For alternating work it comes down to what your reps mean — tick it if
+`12.5x13` is thirteen per arm, leave it if thirteen is the whole set.
+
+Every workload figure is worked out fresh from your sets, so ticking one
+corrects your whole history rather than only what comes next.
+
+**Progress charts are deliberately left alone.** A dumbbell number there means
+one dumbbell, which is how dumbbell lifts are normally quoted, and the chart is
+about your own progression rather than a claim about total load. Workload is
+the opposite: it says "kg moved", so it has to be true.
+
 ---
 
 ## Backups

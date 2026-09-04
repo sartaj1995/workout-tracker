@@ -1445,6 +1445,17 @@ textarea {
   overflow-x: auto;
 }
 
+/* Sits in a list-card rather than a settings card, so it needs its own
+   padding and a rule between rows. */
+.per-side-row {
+  padding: 10px var(--s-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.per-side-row:last-child {
+  border-bottom: none;
+}
+
 .notes-summary {
   display: flex;
   flex-wrap: wrap;
