@@ -27,12 +27,12 @@ No account, no server, no signal required.
 <tr>
 <td width="33%"><img src="docs/screenshots/home.png" alt="Home screen showing Push, Pull and Legs cards with an Up next badge and this week's training grid"></td>
 <td width="33%"><img src="docs/screenshots/session.png" alt="A Push session with last time's weights pre-filled as ghost numbers"></td>
-<td width="33%"><img src="docs/screenshots/progress.png" alt="Estimated 1RM charted over two months for dumbbell press"></td>
+<td width="33%"><img src="docs/screenshots/workload.png" alt="Workload tab charting kilos moved per Push session, up 10% over the last four"></td>
 </tr>
 <tr>
 <td align="center"><sub><b>Pick a day.</b> The overdue one is badged.</sub></td>
 <td align="center"><sub><b>Last time is already in the boxes.</b></sub></td>
-<td align="center"><sub><b>Estimated 1RM, per exercise.</b></sub></td>
+<td align="center"><sub><b>Every kilo you moved, per day.</b></sub></td>
 </tr>
 </table>
 
@@ -64,9 +64,12 @@ at all.
 | 🪜 **Drop sets, properly** | `70x8+55x3+45x3` is one set with three drops, and it round-trips exactly as written. |
 | ⏱️ **Rest timer that starts itself** | Kicks off the moment you check a set off, then beeps and buzzes — reliably, even with the phone in your pocket. −15s / +15s if you need it. |
 | 🙈 **Skip today** | Not feeling an exercise? It leaves the session but stays in your plan, and comes back in its original slot. |
-| 📝 **Notes per exercise** | Seat height, pin position, what to try next week. |
+| ⚠️ **Tells you when you're stuck** | Four sessions without a new best and the exercise says so — on the card, before you load the same weight again out of habit — with a lighter weight to restart from. |
+| 📝 **Notes, two kinds** | A standing one per exercise (seat height, pin position) and one per workout (how you slept, what hurt), asked for at the moment you still remember. |
+| ✏️ **Fix a saved workout** | Mistyped 250 for 25? Open the session in History and correct it. The prefill, the chart and your best all follow the correction — and deleting a workout logged by mistake genuinely undoes it. |
 | 🏸 **Other activities** | Played squash instead? Log it in one tap. It counts towards your week and streak, so a rest day and a squash day don't look identical — but it never changes which gym session is up next. |
-| 📈 **Progress & history** | Estimated 1RM charted per exercise, every saved session, and an 8-week training grid. |
+| 📈 **Progress & history** | Estimated 1RM per exercise, kilos moved per session, every saved workout, and an 8-week training grid. |
+| 📱 **Edit exercises from the gym floor** | The machine you didn't know they had goes in from your phone, no laptop and no deploy. Rename one and it asks whether it's the same lift, so its history follows it. |
 | ☁️ **Optional Drive backup** | Your data, in your own Google Drive, in a folder only this app can see. Off by default. |
 
 <div align="center">
@@ -77,11 +80,17 @@ at all.
 
 ---
 
-## Reading the progress chart
+## Reading your progress
 
-The **Progress** tab plots one number per session, labelled *est. 1RM* — an
-estimate of the heaviest single rep you could manage, worked out from a set you
-actually did. You never have to attempt a true max to get it.
+**Progress** has two halves, because "am I getting stronger?" and "am I doing
+more work?" are different questions. **Lifts** answers the first, one exercise at
+a time. **Workload** answers the second, one training day at a time.
+
+### Lifts
+
+Each session becomes one number, labelled *est. 1RM* — an estimate of the
+heaviest single rep you could manage, worked out from a set you actually did.
+You never have to attempt a true max to get it.
 
 It uses the Epley formula, on your best set of that exercise that session:
 
@@ -107,6 +116,51 @@ Three things to know before you read too much into it:
 Exercises measured in reps or seconds skip the formula entirely and chart *best
 set* or *best hold* instead. The [manual](docs/MANUAL.md#how-progress-is-scored)
 has the per-exercise details.
+
+### When a lift stops moving
+
+<img src="docs/screenshots/progress.png" width="270" align="right" alt="Progress tab flagging dumbbell press as not moving, with a suggestion to drop to about 15 kg">
+
+The chart going flat is the thing you most need telling about and the thing
+you're least likely to notice, because nothing about loading the same weight
+again feels like a decision.
+
+So every exercise is counted against its own best. Four sessions without beating
+it and it's flagged — as a chip on the card **during the workout**, while you can
+still do something about it, and at the top of Lifts as a list, worst first.
+
+Each one comes with somewhere to restart from: about a tenth lighter, rounded to
+a jump your equipment can actually make. The point isn't the lighter weight, it's
+clearing the old number with room to spare. Rep-only exercises get no
+suggestion — "do fewer pull-ups" isn't a plan.
+
+Counting from your best rather than a rolling average is deliberate: progressive
+overload says the number goes up again sooner or later, so that's what it
+measures you against. Four is low enough to catch a plateau early, high enough
+that one tired week doesn't trip it.
+
+<br clear="right">
+
+### Workload
+
+Workload adds up every kilo you moved — `weight × reps` across every set and
+drop set — and charts it per session, with the last four compared against the
+four before them.
+
+It's always **one day at a time**, never a single combined line, and that's the
+whole design. A Legs session moves several times the tonnage of a Push one, so a
+combined chart would mostly track which day you happened to train rather than
+whether you're doing more of anything.
+
+Two things worth knowing:
+
+- **Only kilos count.** Plate-numbered machines and timed holds stay out of the
+  total — their numbers aren't kilos, and adding them in would make it mean nothing.
+- **Dumbbell and one-arm work counts twice**, once you've said which exercises
+  those are under **Settings → Which exercises count twice**. A set written
+  `30x8` is 480 kg off your chest, not 240. It can't be guessed from the name, so
+  it's a list you tick — and because workload is worked out fresh each time, one
+  tick fixes your whole history, not just what comes next.
 
 ---
 
@@ -156,6 +210,9 @@ Those starting numbers are just seeds; the app takes over from your first logged
 session. Machines numbered by plate, and lifts counted in reps or seconds
 instead of kilos, go in `OVERRIDES` at the bottom of the same file — the
 [manual](docs/MANUAL.md#writing-your-notes) has the full reference.
+
+You only have to get this roughly right. The same notes are editable inside the
+app afterwards, so nothing here is a decision you're stuck with.
 
 **3. Put it online and on your phone**
 
@@ -207,9 +264,14 @@ then keep using the thing and complaining about it until it's right.
 
 ## Going further
 
-Two things live in the [manual](docs/MANUAL.md) rather than here, because you
-don't need them to start:
+These live in the [manual](docs/MANUAL.md) rather than here, because you don't
+need any of them to start:
 
+- **[Editing exercises in the app](docs/MANUAL.md#editing-exercises-in-the-app)**
+  — the notes syntax in full, what happens to history when you rename something,
+  and why removing an exercise retires it instead of deleting it.
+- **[Fixing a saved workout](docs/MANUAL.md#fixing-a-saved-workout)** — what a
+  correction does to next session's prefill, your best, and the chart.
 - **[Backing up to Google Drive](docs/MANUAL.md#backing-up-to-google-drive)** —
   optional and off by default. One backup file in your own Drive, re-uploaded
   after every workout you save, using a scope that can't see any of your other
