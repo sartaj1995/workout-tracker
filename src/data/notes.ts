@@ -34,6 +34,8 @@ OR
 Overhead raise - 12.5x7 10x11 10x9 10x
 
 Dumbbell shoulder press - 15x10 15x10 17.5x8 17.5x9
+Rear delt fly (push) - 60x10 60x9
+Face pulls (push) - 60x10 60x9
 
 Pull
 Chest sup row - 60x8 55x10 50x9 45x11
