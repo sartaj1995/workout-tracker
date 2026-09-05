@@ -307,6 +307,10 @@ different names. `Rear delt fly` and `Rear delt fly (push)` are two exercises
 with their own history, charts and stall detection, which is the same trick
 `Tricep pushdown (single)` and `(bar)` already use.
 
+Naming them apart is fine for a handful of exercises on one plan. It stops
+scaling once you train at two gyms whose machines share names —
+[MULTI-GYM.md](MULTI-GYM.md) is a design note on what that would take.
+
 **Switching an `OR` never costs you work.** Tapping the other side of a pair
 swaps it in while the card is still empty — that's the everyday case, deciding
 what you're doing before you start. Once anything is typed or ticked, the

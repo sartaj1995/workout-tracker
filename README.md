@@ -281,6 +281,9 @@ need any of them to start:
   the handful of decisions that explain the odd behaviours: substitute days that
   don't advance the rotation, one exercise shared across two days, and why
   editing your notes resets an in-app choice.
+- **[More than one gym](docs/MULTI-GYM.md)** — a design note for a feature that
+  doesn't exist yet. What would have to change to train at two places whose
+  machines share names, and why the answer isn't a second copy of the app.
 
 ---
 
