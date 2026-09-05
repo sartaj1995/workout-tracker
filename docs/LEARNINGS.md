@@ -9,6 +9,10 @@ concrete half matters: a principle you can't trace back to a scar you earned is
 one you'll ignore under pressure. Commit hashes are in brackets, so the original
 reasoning can be read in full with `git show <hash>`.
 
+Started after the first fifteen pull requests, extended after the next twelve.
+One entry below is marked **revised**: the principle was right, the fix
+underneath it was still wrong, and finding that out was worth more than either.
+
 ---
 
 ## 1. Product judgement
@@ -90,6 +94,49 @@ also removed the unlock-between-every-set annoyance nobody had reported
 > problem lives. Keep asking "why is that happening" past the point it feels
 > productive. The best fixes solve a problem nobody put on the list.
 
+### Typed is work, ticked is just bookkeeping
+
+Tapping the other side of an `OR` pair rebuilt the card from scratch, so two sets
+logged on the single-handle pushdown vanished the moment you tapped the bar to
+see what it was. The swap is *right* when the card is empty — deciding what
+you're doing before you start is the everyday case — and only destructive once
+there's work in it, so the behaviour now branches on that. Crucially the
+threshold is **typed, not ticked**: numbers entered but not yet checked off were
+being thrown away too [`486ac31`].
+
+> **Generalises:** the same gesture can be a convenience or a data loss depending
+> on state, so branch on "has this person invested anything yet?" And set that
+> line at the first keystroke, not at the formal act of completion. A half-filled
+> form, an unsaved draft, an unsubmitted model — all of it is somebody's work,
+> and none of it has been marked as such.
+
+### Build the detector for the case that needs telling
+
+The progression hint fired when you *cleared* the rep ceiling — the happy case,
+where you already know it went well. The opposite case, stuck on the same weight
+for weeks, is where you actually need telling, and nothing said anything. Every
+exercise is now counted against its own best and flagged past four sessions
+without beating it [`9bf08b6`].
+
+> **Generalises:** monitoring gets built around events, and stagnation isn't one.
+> The absence of movement generates no signal, announces nothing, and is exactly
+> what a human stops noticing. Ask what the *silent* failure state is and
+> instrument that, not just the one that raises its hand.
+
+### An insight has to arrive where the decision is
+
+Stall detection shows as a chip on the exercise card during the workout — before
+you load the same weight you've loaded five times without thinking — not only as
+a list in the Progress tab. It also carries the action: a restart weight about a
+tenth down, rounded to a jump the equipment can actually make. Rep-only exercises
+get no number at all, because telling someone to do fewer pull-ups isn't a plan
+[`9bf08b6`].
+
+> **Generalises:** an insight delivered somewhere other than the moment of the
+> decision is a fact, not a recommendation, and it changes nothing. Put it in the
+> path of the choice it should alter — and if you can't attach an action to it,
+> think harder before shipping it as advice.
+
 ---
 
 ## 2. Data and modelling
@@ -153,6 +200,99 @@ the progress charts for no benefit [`b3f981a`].
 > of that category's machinery. Before extending a taxonomy, check what the new
 > member inherits and whether any of it applies.
 
+### An inconsistent error is worse than a large consistent one
+
+A set logged as `30x8` counted 240kg towards workload, but there are two 30kg
+dumbbells, so 480kg actually left the chest. Halving everything would have been
+survivable on its own — a trend line doesn't care about a constant factor. What
+isn't survivable is that **the factor isn't constant**: it lands on some
+exercises and not others, including both halves of the same `OR` pair. Three sets
+of dumbbell press read 825kg where the machine press it alternates with read
+2,005kg, so switching sides moved the day's workload by 2.4× with no change in
+effort — precisely the reading the chart exists to give [`b1d7909`].
+
+The same change deliberately left the *progress* charts alone. A dumbbell number
+there means one dumbbell, which is how the lift is normally quoted; workload says
+"kg moved", so it has to be true.
+
+> **Generalises:** size is the wrong axis to judge an error on. A large bias that
+> applies evenly cancels out of every comparison you care about; a small one that
+> applies unevenly corrupts all of them, and hides inside plausible-looking
+> numbers. And the same figure can be correct in one exhibit and wrong in the
+> next — what makes it right is **the claim the exhibit is making**, not the
+> arithmetic.
+
+### A combined series can track its mix instead of its trend
+
+Workload is charted one day at a time and never all on one line. A Legs session
+moves several times the tonnage of a Push one — 4,130kg against 1,808kg in the
+test data — so a combined chart would be a sawtooth tracking *which day it was*
+rather than whether the work is going anywhere. Plate-numbered machines and timed
+holds stay out of the total entirely, since their numbers aren't kilos
+[`9bf08b6`].
+
+> **Generalises:** when you aggregate across categories with different baselines,
+> the resulting line moves with the composition of the period, not the
+> performance in it. Every apparent trend then has to be defended against "did
+> the mix just change?" Split the series, or index each category to itself. And
+> anything measured in units that aren't the same units doesn't belong in the sum
+> at any weight.
+
+### Compute on read, so a correction reaches the past
+
+Workload is derived when it's displayed rather than stored when it's logged, so
+ticking the two-implement flag for an exercise fixes its entire history rather
+than only what comes next [`b1d7909`].
+
+> **Generalises:** storing a derived value bakes in the definition you held on the
+> day you wrote it. Recomputing from the raw record makes a definition change
+> retroactive and keeps the back-series comparable — which is usually what you
+> want, and always what you want while the definition is still being argued about.
+
+### A rename is a delete plus a create unless someone says otherwise
+
+Ids are slugs of names, so tidying "Chest sup row" into "Chest supported row"
+reads to the system as one exercise vanishing and an unrelated one arriving.
+Every session, chart, best and stall count stays behind on a name you can no
+longer see, and the new one starts from zero. Nothing errors, and you'd notice
+weeks later. Anything that both appears and disappears in one edit is now asked
+about, and answering "renamed from" carries the id — and the history with it
+[`4e05680`].
+
+> **Generalises:** continuity of identity is information only a person holds; no
+> diff contains it. Any system keyed off a label needs an explicit channel for
+> "this is the same thing under a new name" — otherwise every reorganisation,
+> rebrand or taxonomy tidy-up silently truncates the history it passes through.
+
+### A correction has to travel as far as the error did
+
+Nothing that reached History could be changed, and a saved number isn't inert: it
+becomes next session's prefill, a point on the progress chart, and possibly a
+false personal best. One mistyped `250` for `25` quietly poisoned three things at
+once. Making sessions editable meant making the *seed* follow — a correction
+moves it, correcting an older session doesn't (a newer one still has the last
+word), and deleting the last session an exercise appears in resets its seed to the
+notes, so deleting a workout logged by mistake genuinely undoes it [`e7ae76e`].
+
+> **Generalises:** fixing the source record is the easy half. Everything
+> downstream that was computed from it — caches, seeds, derived tables, the deck
+> someone already circulated — still carries the bad number, and none of it will
+> tell you. Trace the blast radius of a correction as carefully as you'd trace the
+> blast radius of a bug.
+
+### Don't infer a durable fact from a transient artefact
+
+"Has this person ever granted Drive access?" was answered by looking for an access
+token. Tokens last about an hour, so a token that had expired or been rejected
+read as consent withdrawn, and the app asked for full consent again instead of
+quietly reissuing. The grant is now recorded separately and cleared only by an
+explicit Disconnect [`b17d3ab`].
+
+> **Generalises:** a convenient proxy is not the fact. Presence of a session isn't
+> agreement, activity isn't engagement, a returned form isn't approval — and the
+> moment the proxy expires on a different schedule than the fact, the system
+> starts asserting something untrue. Store the thing you actually mean.
+
 ---
 
 ## 3. Designing for where it's actually used
@@ -171,16 +311,31 @@ returning to the foreground, and on load [`b299b22`].
 > conditions it was designed for. Model the obligation ("this is owed") rather
 > than the attempt ("we tried once").
 
-### Timers stop when you aren't looking
+### Timers stop when you aren't looking — *revised*
 
 The rest alert was played when a JavaScript timer noticed zero. A backgrounded
 page has its timers throttled to the point of never firing, so with the phone in
-a pocket nothing happened. The alert is now scheduled on the audio clock the
-moment rest starts — the audio thread keeps its own time [`be74b6f`].
+a pocket nothing happened. The alert was moved onto the audio clock, which keeps
+its own time [`be74b6f`].
 
-> **Generalises:** know which clock is actually running. Anything that depends on
-> your process being awake to notice a deadline will miss it. Schedule with the
-> component that keeps time independently.
+That fix was right in principle and still wrong in fact. **The audio clock stops
+too.** A context with nothing playing is suspended the moment the page
+backgrounds, and its clock suspends with it — measured in the browser, four
+seconds of wall time advanced the audio clock by zero. So the alert fired late by
+however long you were away, or never. Both of the original symptoms, back again,
+from a mechanism chosen specifically to avoid them.
+
+What actually holds: something inaudible plays for the length of every rest — a
+30Hz tone at a ten-thousandth of gain — because a context with something playing
+keeps running. And under that, a net: both clocks are recorded when the alert is
+scheduled, and on return whatever the audio clock failed to advance is time the
+alert didn't count down, so it's re-scheduled against the wall clock [`e4251f8`].
+
+> **Generalises:** knowing which clock is running is only half of it. The
+> replacement you reach for can share the failure you're escaping — a different
+> subsystem is not automatically an exempt one. **Verify the new mechanism in the
+> failure condition itself**, rather than trusting the reasoning that led you to
+> it. Two rounds here, and the second was only found by measuring.
 
 ### Make field-only behaviour testable from a desk
 
@@ -237,6 +392,57 @@ review or sign-ins expiring every 7 days [`e06c7f5`].
 > process beats a broader one that needs it — and the choice is far cheaper
 > before you build than after.
 
+### Attach the ask to a gesture that already exists
+
+Finishing a workout kept reporting "Google sign-in needed" and leaving the backup
+owed. Browser sign-in hands out a token good for about an hour, with no refresh
+token available to a page with no backend, so by the time a workout ends the
+token is almost always dead — and the automatic backup, running without a
+gesture, correctly refused to raise a window nobody asked for. The gesture was
+there all along: **"Save workout" is a tap, moments before the backup runs.** The
+token is now requested from that handler [`b17d3ab`].
+
+It has to be called from inside the handler, not from an `await` that settles a
+moment later, because Safari only opens a window from the handler itself. And the
+library is fetched on app open rather than inside the gesture, since downloading
+a script can consume the whole window the tap bought you.
+
+> **Generalises:** when a system needs authorisation, attention or a decision,
+> don't manufacture a new interruption for it — find the moment the person is
+> already acting and attach it there. The budget for interrupting someone is
+> small, and it is nearly always cheaper to ride an existing action than to
+> invent one. Note also how narrow the window can be: permission to interrupt
+> expires, sometimes in milliseconds.
+
+### A fallback has to prove the failure it exists to cover
+
+The net that re-schedules a missed rest alert could easily cause the double beep
+it exists to prevent. So it acts only on evidence: the tones report having
+sounded via their own `ended` event rather than being assumed to have played, and
+the two clocks are compared rather than the audio context's state being sampled,
+which races with the browser resuming it. Verified in both directions — nothing
+re-fires when the alert was already heard, nothing re-fires when the page never
+left [`e4251f8`].
+
+> **Generalises:** a safety net that triggers on suspicion becomes a second
+> source of the fault. Gate recovery on positive evidence that the thing actually
+> failed, and test the *false-positive* direction as deliberately as the case you
+> built it for. Retries, failovers and reconciliation jobs all fail this way, and
+> they fail loudly in production.
+
+### The repair path has to reach the place the problem is found
+
+Adding an exercise meant editing a TypeScript file and redeploying — impossible
+from the gym floor, which is exactly where you are when you discover the gym has
+a machine your notes don't. Settings now opens the same notes in a text box
+[`4e05680`].
+
+> **Generalises:** it isn't enough to design the product for where it's used; the
+> **means of fixing it** has to be usable from there too. A correction that
+> requires a laptop, a VPN, or a person who's on holiday is a correction that
+> doesn't happen at the moment it's needed — and the gap between noticing and
+> being able to act is where most bad data gets written.
+
 ---
 
 ## 4. Shipping and change management
@@ -288,6 +494,52 @@ Splitting the context and hook out fixed it [`3b05bd9`].
 > **Generalises:** when the dev loop misbehaves in a way that looks like an
 > application bug, suspect the tooling's rules before your own logic.
 
+### When you remove the friction, you remove the check it was doing
+
+Letting people edit their exercises in the app took the laptop out of the loop —
+and with it something nobody had written down. *What a deploy quietly provided
+was a diff and a moment to notice something was wrong.* Replacing it took
+deliberate work: a live count of exercises per day that should match the home
+screen, and warnings for lines that parsed to nothing — a name above the first
+heading, a bare name matching no earlier exercise, or the long dash a phone
+keyboard substitutes for `" - "` [`4e05680`].
+
+> **Generalises:** slow paths accumulate safeguards that nobody records as
+> safeguards — a review, a diff, a second pair of eyes, the pause before you
+> press send. Streamline the path and those disappear silently, and the failure
+> shows up later as "how did that get through?" **Before removing a step, name
+> what it was catching**, then decide explicitly whether to rebuild it or accept
+> its loss. This is the whole argument about removing approval gates.
+
+### Once people can edit it, your file is a starting point, not an instruction
+
+Notes edited in the app take over from that point; the shipped file stops being a
+standing instruction and becomes a seed, with an explicit way back to it. That
+needed the load path fixed — it compared the stored fingerprint against the
+*built-in* notes and rebuilt from them on any difference, which would have thrown
+away phone edits on the very next page load [`4e05680`].
+
+> **Generalises:** the moment you let people edit something you also generate,
+> authority over it inverts, and any sync logic written under the old assumption
+> now destroys their work on a schedule. Decide who owns each field, and make
+> "reset to default" a deliberate action rather than the default behaviour.
+
+### Write claims that don't decay
+
+The README said eleven merged pull requests and 3,400 lines of source; by the
+time anyone read it, it was twenty and past four thousand. Both were rephrased to
+describe the shape of the thing rather than a number needing maintenance
+[`d503730`]. Separately, the README had drifted about a week behind the app —
+the manual was updated with each feature and the front page wasn't, and every
+screenshot showed an older UI [`fd72078`].
+
+> **Generalises:** any figure you write into a document is a maintenance
+> commitment you're unlikely to honour. Either give it an owner and a refresh
+> trigger, or write the sentence so it stays true — the second is almost always
+> better. And documentation rots hardest in the parts your change didn't touch,
+> so "which other artefacts describe this?" belongs on the checklist, screenshots
+> included.
+
 ---
 
 ## 5. Interfaces and communication
@@ -337,6 +589,35 @@ the one control you'd most regret mis-tapping with sweaty hands [`916a2a4`].
 > **Generalises:** these are measurable, and therefore checkable, unlike "does
 > this look clear". And size controls by the cost of getting them wrong, not by
 > how often they're used.
+
+### Publish a derived number with the ways it misleads
+
+The Progress tab charted "est. 1RM (kg)" with nothing anywhere saying what it
+was. Log `80x9`, see `104`, and there's no way to tell where it came from or
+whether it means you can lift 104. The docs now give the formula, a worked
+example, why an estimate beats raw weight — and, most usefully, the three ways it
+misreads: it tracks your best set rather than your workload, drop sets don't
+raise it, and it runs optimistic past ten reps [`d12880f`].
+
+> **Generalises:** a derived number without its derivation is either ignored or
+> over-trusted, and you don't get to choose which. Ship the definition where the
+> number is *read*, not in an appendix — and state its failure modes explicitly.
+> Naming the three ways your metric lies is what makes the other readings
+> credible; it reads as confidence, not weakness.
+
+### Ask while they still know the answer
+
+Workouts now carry a note — how you slept, what hurt, what to change. It's
+offered in the finish sheet because that is the only moment you still remember,
+and it stays editable from History afterwards. It's kept distinct from an
+exercise's note, which is a standing setup reminder rather than a record of one
+day [`e7ae76e`].
+
+> **Generalises:** context decays fast, and a form sent the next morning collects
+> a worse answer than the same question asked at the moment of the event. Put
+> capture at the point of knowledge, keep it optional, and let it be corrected
+> later — retrospective reconstruction is the most expensive and least reliable
+> data you can gather.
 
 ---
 
@@ -399,6 +680,32 @@ cheap to write.
 > **Generalises:** work in slices that are individually explainable. If you can't
 > describe the change in a sentence, it's two changes.
 
+### A confident wrong guess costs more than a question
+
+When a notes edit both removes a name and adds one, the app guesses at a rename
+by name similarity — but the guess is only ever a **pre-selection**, never an
+auto-confirm. A wrong confident answer would silently strand months of history on
+an invisible id, so the confirmation stays with the person [`4e05680`].
+
+> **Generalises:** the right question for any automated inference isn't "how often
+> is it right?" but "what does a wrong one cost, and would anyone notice?" High
+> accuracy plus a silent, expensive, late-surfacing failure is a worse trade than
+> a slightly annoying prompt. Let the machine do the work and propose the answer;
+> keep the confirmation where the consequence lands.
+
+### Measure the assumption instead of reasoning about it
+
+The audio-clock fix was a sound piece of reasoning from a plausible model of how
+browsers behave, and it was wrong. What settled it wasn't more argument but a
+measurement: with the context suspended, four seconds of wall time advanced the
+audio clock by zero [`e4251f8`].
+
+> **Generalises:** a model and I can both produce confident, coherent, internally
+> consistent reasoning about a system neither of us has actually observed — and
+> plausibility is exactly what makes that hard to catch in review. When a fix
+> rests on how something behaves, go and measure the behaviour. One number ends
+> the discussion that a page of argument won't.
+
 ---
 
 ## Next time: the checklist
@@ -410,7 +717,7 @@ cheap to write.
 - What's the narrowest permission scope that works, and does it skip a review
   process?
 - Where is the user physically standing when they use this? Design for that
-  place, not the desk it's built at.
+  place, not the desk it's built at — and can they *fix* it from there too?
 
 **While building**
 
@@ -421,6 +728,15 @@ cheap to write.
 - Every persisted write: validated before storing, invalidatable afterwards.
 - Every failure: recorded, and surfaced where attention already is.
 - Every destructive action: manual, confirmed, naming what will be lost.
+- Every derived number: shipped with its definition and the ways it misleads.
+- Every aggregate across unlike categories: is that line tracking the trend, or
+  the mix?
+- Every error in the data: is it consistent? An uneven small one beats an even
+  large one only in size, and loses on everything else.
+- Every stored fact: is it the fact, or a proxy that expires on its own schedule?
+- Every gesture that discards work: does it branch on whether there's work to
+  discard — counting typed, not just ticked?
+- Every automated guess: what does a wrong one cost, and would anyone notice?
 
 **Before shipping a change**
 
@@ -428,7 +744,14 @@ cheap to write.
   effect?
 - What stored user overrides now conflict with it?
 - Walk the zero state: fresh device, empty data, first run.
+- What was the slow path quietly checking that the fast one no longer does?
+- What else describes this? README, manual, screenshots, the deck — the parts
+  your change didn't touch are where it rots.
+- Any claim with a number in it: does it need an owner, or a rewrite that can't
+  go stale?
 
 **After shipping**
 
 - Use it for real, in the real place. Then fix what that finds first.
+- When a fix rests on how something behaves, measure the behaviour. The
+  second-round bug hides inside reasoning that sounded right.
