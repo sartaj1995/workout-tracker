@@ -37,7 +37,10 @@ export interface Store {
   resetNotes: () => void
   replaceState: (next: AppState) => void
   bestEver: (exerciseId: string) => number
-  historyFor: (exerciseId: string) => { at: number; top: number; sets: WorkSet[] }[]
+  /** One point per session, oldest first. `note` is what you wrote that day. */
+  historyFor: (
+    exerciseId: string,
+  ) => { at: number; top: number; sets: WorkSet[]; note?: string }[]
 }
 
 export const StoreCtx = createContext<Store | null>(null)

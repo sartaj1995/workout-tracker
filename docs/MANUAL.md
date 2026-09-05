@@ -111,6 +111,14 @@ session leaves the seed alone, because a newer one still has the last word, and
 deleting the only session an exercise appears in puts its seed back to the
 starting numbers in your notes.
 
+Notes turn up wherever the numbers they explain do. Tap a point on either
+Progress chart and you get that session underneath it — the date, the figure,
+what you actually did, and the note. On Workload the exercise and set counts
+come too, because a low point is usually a session cut short, and *3 exercises ·
+7 sets* against the usual ten says so before the note has to. The lists below
+each chart show notes as well, so a run of sessions can be read without tapping
+through them.
+
 Each workout also carries a **note** of its own — how you slept, what hurt,
 what to change next time. It's offered when you save the workout, since that's
 the only moment you still remember, and it can be added or edited here later.
