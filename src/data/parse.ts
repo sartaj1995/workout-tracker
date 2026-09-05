@@ -182,6 +182,21 @@ export function parseNotes(
     if (sawBlank) optional = true
     sawBlank = false
 
+    // The same name twice is one exercise, not two. Ids are slugs of names, so
+    // a second definition can only ever point at the first — it used to push a
+    // duplicate into the catalog and quietly replace the earlier line's
+    // starting numbers, which reads as "two exercises" right up until you
+    // notice they share a history. The first definition stands, the day still
+    // gets it, and the warning says so.
+    if (defs.some((d) => d.id === id)) {
+      warnings.push(
+        `"${name}" is defined more than once. It's a single exercise on both days — one history, one chart — and only the first line's numbers count. Name the second one differently, like "${name} (${day})", to track them apart.`,
+      )
+      pendingOr = false
+      dayPlan[day].push({ id, optional })
+      continue
+    }
+
     let choiceId: string | undefined
     if (pendingOr && defs.length > 0) {
       const prev = defs[defs.length - 1]

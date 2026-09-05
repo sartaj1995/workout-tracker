@@ -295,6 +295,18 @@ chart, and it brings its `OR` alternatives with it. Which side of a pair you're
 using is remembered per day, though — dumbbells on Push and the machine on Upper
 is fine, and switching one doesn't disturb the other.
 
+**One name, one exercise.** Ids are made from names, so writing the same name
+under two days doesn't give you two of them — the second line can only point at
+the first, and you'd get one shared history spread across both days. Writing it
+twice *with sets* is flagged for that reason: the first line's numbers stand,
+the day still gets the exercise, and a warning tells you what happened.
+
+When you want the same movement tracked separately on two days — the same
+rear delt fly done heavy on Pull and as a finisher on Push, say — give them
+different names. `Rear delt fly` and `Rear delt fly (push)` are two exercises
+with their own history, charts and stall detection, which is the same trick
+`Tricep pushdown (single)` and `(bar)` already use.
+
 **Switching an `OR` never costs you work.** Tapping the other side of a pair
 swaps it in while the card is still empty — that's the everyday case, deciding
 what you're doing before you start. Once anything is typed or ticked, the
