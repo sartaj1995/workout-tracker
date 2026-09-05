@@ -21,7 +21,18 @@ const W = 320
 const H = 150
 const PAD = { l: 30, r: 8, t: 12, b: 20 }
 
-function Chart({ points, label }: { points: { at: number; top: number }[]; label: string }) {
+function Chart({
+  points,
+  label,
+  selected,
+  onSelect,
+}: {
+  points: { at: number; top: number }[]
+  label: string
+  /** Index of the point being inspected, or -1 for none. */
+  selected?: number
+  onSelect?: (i: number) => void
+}) {
   if (points.length < 2) return null
 
   const values = points.map((p) => p.top)
@@ -34,6 +45,7 @@ function Chart({ points, label }: { points: { at: number; top: number }[]; label
   const x = (i: number) => PAD.l + (i / (points.length - 1)) * (W - PAD.l - PAD.r)
   const y = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b)
 
+  const sel = selected
   const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.top).toFixed(1)}`).join(' ')
   const area = `${line} L${x(points.length - 1).toFixed(1)},${H - PAD.b} L${x(0).toFixed(1)},${H - PAD.b} Z`
 
@@ -66,15 +78,56 @@ function Chart({ points, label }: { points: { at: number; top: number }[]; label
       <path d={area} fill="url(#fade)" />
       <path d={line} fill="none" stroke="var(--dc, var(--primary))" strokeWidth="2" strokeLinejoin="round" />
 
+      {sel !== undefined && sel >= 0 && sel < points.length ? (
+        <line
+          x1={x(sel)}
+          x2={x(sel)}
+          y1={PAD.t}
+          y2={H - PAD.b}
+          stroke="var(--dc, var(--primary))"
+          strokeWidth="1"
+          strokeDasharray="2 2"
+          opacity="0.7"
+        />
+      ) : null}
+
       {points.map((p, i) => (
         <circle
           key={i}
           cx={x(i)}
           cy={y(p.top)}
-          r={i === points.length - 1 ? 3.6 : 2.2}
+          r={i === sel ? 5 : i === points.length - 1 ? 3.6 : 2.2}
           fill={p.top === max ? 'var(--warn)' : 'var(--dc, var(--primary))'}
+          stroke={i === sel ? 'var(--surface)' : 'none'}
+          strokeWidth={i === sel ? 1.6 : 0}
         />
       ))}
+
+      {/*
+        One hit area across the whole plot rather than a target per dot. The
+        dots are 2px across — unhittable with a thumb — and at eight or more
+        sessions per-dot targets big enough to tap would overlap each other.
+        Tapping anywhere picks the nearest session by x.
+      */}
+      {onSelect ? (
+        <rect
+          x={PAD.l}
+          y={0}
+          width={W - PAD.l - PAD.r}
+          height={H}
+          fill="transparent"
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            const box = e.currentTarget.getBoundingClientRect()
+            const at = PAD.l + ((e.clientX - box.left) / box.width) * (W - PAD.l - PAD.r)
+            let best = 0
+            for (let i = 1; i < points.length; i++) {
+              if (Math.abs(x(i) - at) < Math.abs(x(best) - at)) best = i
+            }
+            onSelect(best)
+          }}
+        />
+      ) : null}
 
       <text x={PAD.l} y={H - 6} fontSize="8" fill="var(--muted)">
         {formatDate(points[0].at)}
@@ -83,6 +136,46 @@ function Chart({ points, label }: { points: { at: number; top: number }[]; label
         {formatDate(points[points.length - 1].at)}
       </text>
     </svg>
+  )
+}
+
+/**
+ * What one point on a chart was.
+ *
+ * The reason to reach for a single session is nearly always that it looks
+ * wrong — a dip you don't recognise. The note you wrote that day is the answer
+ * to that question, and until now it only existed in History, which is not
+ * where the question gets asked.
+ */
+function PointDetail({
+  at,
+  headline,
+  detail,
+  note,
+}: {
+  at: number
+  headline: string
+  detail?: string
+  note?: string
+}) {
+  return (
+    <div className="point-detail">
+      <div className="point-detail__head">
+        <span>{formatDate(at)}</span>
+        <b>{headline}</b>
+      </div>
+      {detail ? <div className="point-detail__sets">{detail}</div> : null}
+      {note ? (
+        <p className="point-detail__note">
+          <Icon name="pin" size={13} />
+          <span>{note}</span>
+        </p>
+      ) : (
+        <p className="tiny muted" style={{ margin: '6px 0 0' }}>
+          No note on this one. You can add one from History.
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -157,6 +250,10 @@ function Lifts({
   const change = first && first.top > 0 ? ((latest.top - first.top) / first.top) * 100 : 0
   const since = sessionsSinceBest(history)
   const rest = deload(def, store.state.prefs, latest.sets[0])
+  // Held as a timestamp rather than an index so switching exercise simply
+  // stops matching, instead of pointing at whatever now sits in that slot.
+  const [selAt, setSelAt] = useState<number | null>(null)
+  const sel = history.findIndex((h) => h.at === selAt)
 
   const metricLabel =
     def.metric === 'time' || def.metric === 'weight_time'
@@ -242,8 +339,21 @@ function Lifts({
         {history.length < 2 ? (
           <div className="small muted">One session logged. The line appears after the next one.</div>
         ) : (
-          <Chart points={history} label={`${def.name} progress`} />
+          <Chart
+            points={history}
+            label={`${def.name} progress`}
+            selected={sel}
+            onSelect={(i) => setSelAt(history[i].at)}
+          />
         )}
+        {sel >= 0 ? (
+          <PointDetail
+            at={history[sel].at}
+            headline={`${round(history[sel].top)} ${metricLabel.startsWith('est') ? unitLabel(def) : ''}`.trim()}
+            detail={formatSets(history[sel].sets, def)}
+            note={history[sel].note}
+          />
+        ) : null}
         {history.length >= 2 && !isStalled(history) ? (
           <div className="tiny muted">
             {since === 0
@@ -259,6 +369,7 @@ function Lifts({
           <div className="log-line" key={h.at}>
             <span className="n">{formatDate(h.at)}</span>
             <span className="v">{formatSets(h.sets, def)}</span>
+            {h.note ? <span className="log-line__note">{h.note}</span> : null}
           </div>
         ))}
       </div>
@@ -277,15 +388,27 @@ function Workload() {
   const store = useStore()
   const { sessions } = store.state
 
+  // Sets and exercises come along because they're usually the explanation for
+  // a low point — a session cut short is the same lifts with a set missing
+  // from each, and the count says so before the note has to.
   const seriesFor = (day: DayId) =>
     sessions
       .filter((s) => s.day === day)
-      .map((s) => ({ at: s.finishedAt ?? s.startedAt, top: sessionVolume(s, store.defs) }))
+      .map((s) => ({
+        at: s.finishedAt ?? s.startedAt,
+        top: sessionVolume(s, store.defs),
+        note: s.note,
+        exercises: s.entries.length,
+        sets: s.entries.reduce((n, e) => n + e.sets.length, 0),
+      }))
       .filter((p) => p.top > 0)
       .sort((a, b) => a.at - b.at)
 
   const trained = DAYS.filter((d) => seriesFor(d.id).length > 0)
   const [day, setDay] = useState<DayId>(trained[0]?.id ?? 'push')
+  // Held as a timestamp rather than an index so switching day simply stops
+  // matching, instead of pointing at whatever now sits in that slot.
+  const [selAt, setSelAt] = useState<number | null>(null)
 
   if (trained.length === 0) {
     return (
@@ -298,6 +421,7 @@ function Workload() {
 
   const pick = trained.some((d) => d.id === day) ? day : trained[0].id
   const points = seriesFor(pick)
+  const sel = points.findIndex((p) => p.at === selAt)
   const latest = points[points.length - 1]
   const best = Math.max(...points.map((p) => p.top))
   // Four and four, so one big or one washed-out session doesn't decide it.
@@ -348,8 +472,21 @@ function Workload() {
             workout.
           </div>
         ) : (
-          <Chart points={points} label={`${pick} workload`} />
+          <Chart
+            points={points}
+            label={`${pick} workload`}
+            selected={sel}
+            onSelect={(i) => setSelAt(points[i].at)}
+          />
         )}
+        {sel >= 0 ? (
+          <PointDetail
+            at={points[sel].at}
+            headline={`${Math.round(points[sel].top).toLocaleString()} kg`}
+            detail={`${plural(points[sel].exercises, 'exercise')} · ${plural(points[sel].sets, 'set')}`}
+            note={points[sel].note}
+          />
+        ) : null}
       </div>
 
       <p className="tiny muted">
@@ -364,6 +501,7 @@ function Workload() {
           <div className="log-line" key={p.at}>
             <span className="n">{formatDate(p.at)}</span>
             <span className="v">{Math.round(p.top).toLocaleString()} kg</span>
+            {p.note ? <span className="log-line__note">{p.note}</span> : null}
           </div>
         ))}
       </div>

@@ -322,6 +322,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
               at: s.finishedAt ?? s.startedAt,
               top: Math.max(...sets.map((x) => score(x, def)), 0),
               sets,
+              note: s.note,
             }
           })
           .sort((a, b) => a.at - b.at)
