@@ -13,6 +13,13 @@ Started after the first fifteen pull requests, extended after the next twelve.
 One entry below is marked **revised**: the principle was right, the fix
 underneath it was still wrong, and finding that out was worth more than either.
 
+Its counterpart is [`DEFECTS.md`](DEFECTS.md) — every defect so far in one table,
+with its cause class and what caught it. This file is selective and organised by
+theme, which is what makes it readable and also what stops it counting: five
+Drive backup failures sit under five different headings here, so the fact that
+one feature produced a fifth of the damage only shows up over there. Read this
+one for the principle, that one for the tally.
+
 ---
 
 ## 1. Product judgement
