@@ -12,6 +12,8 @@ export interface Store {
   /** Replace a saved workout with an edited copy of it, and re-seed from it. */
   saveSession: (session: Session) => void
   deleteSession: (id: string) => void
+  /** Undo a delete — restores the workout and the prefills it was feeding. */
+  restoreSession: (session: Session) => void
   patchSet: (exerciseId: string, index: number, patch: Partial<WorkSet>) => void
   addSet: (exerciseId: string) => void
   removeSet: (exerciseId: string, index: number) => void
