@@ -48,6 +48,13 @@ export function volume(sets: WorkSet[], def: ExerciseDef): number {
   return def.perSide ? total * 2 : total
 }
 
+/** What the score on a chart or a best actually measures, in words. */
+export function metricLabel(def: ExerciseDef): string {
+  if (def.metric === 'time' || def.metric === 'weight_time') return 'best hold'
+  if (def.metric === 'reps') return 'best set'
+  return `est. 1RM (${unitLabel(def)})`
+}
+
 export function unitLabel(def: ExerciseDef): string {
   return def.unit === 'plate' ? 'plate' : 'kg'
 }
