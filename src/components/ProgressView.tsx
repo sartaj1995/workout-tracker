@@ -5,7 +5,9 @@ import {
   formatDate,
   formatSets,
   isStalled,
+  metricLabel,
   plural,
+  relativeDay,
   round,
   sessionVolume,
   sessionsSinceBest,
@@ -181,9 +183,15 @@ function PointDetail({
 
 export function ProgressView() {
   const store = useStore()
-  const [mode, setMode] = useState<'lifts' | 'workload'>('lifts')
+  const [mode, setMode] = useState<'lifts' | 'workload' | 'bests'>('lifts')
   const withHistory = store.state.catalog.filter((d) => store.historyFor(d.id).length > 0)
   const [picked, setPicked] = useState(withHistory[0]?.id ?? '')
+
+  /** Picking an exercise anywhere always lands you on its chart. */
+  const jumpTo = (id: string) => {
+    setPicked(id)
+    setMode('lifts')
+  }
 
   if (withHistory.length === 0) {
     return (
@@ -202,19 +210,17 @@ export function ProgressView() {
         <button className={mode === 'workload' ? 'on' : ''} onClick={() => setMode('workload')}>
           Workload
         </button>
+        <button className={mode === 'bests' ? 'on' : ''} onClick={() => setMode('bests')}>
+          Bests
+        </button>
       </div>
 
       {mode === 'lifts' ? (
-        <Lifts
-          withHistory={withHistory}
-          picked={picked}
-          onPick={(id) => {
-            setPicked(id)
-            setMode('lifts')
-          }}
-        />
-      ) : (
+        <Lifts withHistory={withHistory} picked={picked} onPick={jumpTo} />
+      ) : mode === 'workload' ? (
         <Workload />
+      ) : (
+        <Bests withHistory={withHistory} onPick={jumpTo} />
       )}
     </div>
   )
@@ -255,12 +261,6 @@ function Lifts({
   const [selAt, setSelAt] = useState<number | null>(null)
   const sel = history.findIndex((h) => h.at === selAt)
 
-  const metricLabel =
-    def.metric === 'time' || def.metric === 'weight_time'
-      ? 'best hold'
-      : def.metric === 'reps'
-        ? 'best set'
-        : `est. 1RM (${unitLabel(def)})`
 
   return (
     <>
@@ -334,7 +334,7 @@ function Lifts({
 
       <div className="card">
         <div className="tiny muted" style={{ marginBottom: 4 }}>
-          {metricLabel}
+          {metricLabel(def)}
         </div>
         {history.length < 2 ? (
           <div className="small muted">One session logged. The line appears after the next one.</div>
@@ -349,7 +349,7 @@ function Lifts({
         {sel >= 0 ? (
           <PointDetail
             at={history[sel].at}
-            headline={`${round(history[sel].top)} ${metricLabel.startsWith('est') ? unitLabel(def) : ''}`.trim()}
+            headline={`${round(history[sel].top)} ${def.metric === 'weight_reps' ? unitLabel(def) : ''}`.trim()}
             detail={formatSets(history[sel].sets, def)}
             note={history[sel].note}
           />
@@ -371,6 +371,80 @@ function Lifts({
             <span className="v">{formatSets(h.sets, def)}</span>
             {h.note ? <span className="log-line__note">{h.note}</span> : null}
           </div>
+        ))}
+      </div>
+    </>
+  )
+}
+
+/** A best set within this many days still counts as news. */
+const FRESH_DAYS = 21
+
+/**
+ * Every exercise's best, newest first.
+ *
+ * The counterpart to "Not moving" on the Lifts tab: that one lists what has
+ * stopped going up, this one lists what went up and when. Sorted by *when*
+ * rather than alphabetically or by size, because the useful question isn't
+ * "what am I strongest at" — a number you can't compare across exercises
+ * anyway — it's "what have I actually moved lately".
+ */
+function Bests({
+  withHistory,
+  onPick,
+}: {
+  withHistory: ExerciseDef[]
+  onPick: (id: string) => void
+}) {
+  const store = useStore()
+
+  const bests = withHistory
+    .map((def) => {
+      const history = store.historyFor(def.id)
+      const best = history.reduce((a, b) => (b.top >= a.top ? b : a))
+      return { def, ...best, sessions: history.length }
+    })
+    .filter((b) => b.top > 0)
+    .sort((a, b) => b.at - a.at)
+
+  if (bests.length === 0) {
+    return (
+      <div className="empty">
+        Nothing to show yet. Log a set with a number in it and your best turns up here.
+      </div>
+    )
+  }
+
+  const cutoff = Date.now() - FRESH_DAYS * 86400000
+  const fresh = bests.filter((b) => b.at >= cutoff).length
+
+  return (
+    <>
+      <p className="tiny muted" style={{ marginTop: 0 }}>
+        {fresh
+          ? `${plural(fresh, 'best')} set in the last ${FRESH_DAYS} days.`
+          : `No new bests in the last ${FRESH_DAYS} days.`}{' '}
+        Each one is the single hardest set you've logged for that exercise.
+      </p>
+
+      <div className="list-card">
+        {bests.map((b) => (
+          <button key={b.def.id} className="best-row" onClick={() => onPick(b.def.id)}>
+            <span className="best-row__body">
+              <span className="best-row__name">
+                {b.def.name}
+                {b.at >= cutoff ? <span className="best-row__fresh">new</span> : null}
+              </span>
+              <span className="best-row__sets">{formatSets(b.sets, b.def)}</span>
+              <span className="best-row__when">
+                {formatDate(b.at)} · {relativeDay(b.at)} · {plural(b.sessions, 'session')} logged
+              </span>
+            </span>
+            <span className="best-row__score">
+              <b>{round(b.top)}</b>
+              <span>{metricLabel(b.def)}</span>
+            </span>
+          </button>
         ))}
       </div>
     </>

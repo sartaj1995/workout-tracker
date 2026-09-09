@@ -9,6 +9,7 @@ app behaves the way it does.
 - [Fixing a saved workout](#fixing-a-saved-workout)
 - [How progress is scored](#how-progress-is-scored)
 - [When a lift stops moving](#when-a-lift-stops-moving)
+- [Bests](#bests)
 - [Workload](#workload)
 - [Backups](#backups)
 - [Backing up to Google Drive](#backing-up-to-google-drive)
@@ -218,6 +219,28 @@ down to and telling you to do fewer pull-ups isn't a plan.
 Counting from the best, rather than from a rolling average, is deliberate: it's
 what progressive overload actually asks. Sooner or later the number has to go
 up again.
+
+---
+
+## Bests
+
+**Progress → Bests** lists every exercise's single hardest set, newest first,
+with a *new* badge on anything set in the last three weeks. Tapping a row opens
+that exercise's chart.
+
+Sorted by *when* rather than by size or name on purpose. The size of a best
+isn't comparable between exercises — 43 on a dumbbell press and 18 on a
+plate-numbered pulldown aren't the same kind of number — so ranking by it would
+invite a comparison that means nothing. When you last moved something is a real
+question.
+
+It's the counterpart to *Not moving* on the Lifts tab: that lists what has
+stopped going up, this lists what went up and when. An exercise near the bottom
+of Bests and near the top of Not moving is the same fact told twice.
+
+The best is whichever session scored highest, which isn't always the most
+recent one — it's scored the same way the charts are, so drop sets don't count
+towards it.
 
 ---
 
