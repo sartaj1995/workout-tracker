@@ -7,7 +7,8 @@ export interface Store {
   update: (fn: (s: AppState) => AppState) => void
   startSession: (day: DayId) => void
   discardSession: () => void
-  finishSession: (note?: string) => void
+  /** `day` (yyyy-mm-dd) records it against a past date instead of now. */
+  finishSession: (note?: string, day?: string) => void
   /** Replace a saved workout with an edited copy of it, and re-seed from it. */
   saveSession: (session: Session) => void
   deleteSession: (id: string) => void

@@ -4,7 +4,12 @@ import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
 import type { Activity, Session } from '../lib/types'
 import { DAYS } from '../data/parse'
-import { ConfirmDeleteSession, EditExercise, EditSessionNote } from './EditSession'
+import {
+  ConfirmDeleteSession,
+  EditExercise,
+  EditSessionDate,
+  EditSessionNote,
+} from './EditSession'
 import { Icon } from './Icon'
 
 export function HistoryView() {
@@ -99,6 +104,7 @@ function SessionCard({
   const [editing, setEditing] = useState<string | null>(null)
   const [noting, setNoting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [dating, setDating] = useState(false)
   const label = DAYS.find((d) => d.id === session.day)?.label ?? session.day
   const sets = session.entries.reduce((n, e) => n + e.sets.length, 0)
   const mins = session.finishedAt
@@ -160,6 +166,9 @@ function SessionCard({
               </span>
             ) : null}
             <div className="spacer" />
+            <button className="chip" onClick={() => setDating(true)}>
+              <Icon name="calendar" size={14} /> change date
+            </button>
             <button className="chip" onClick={() => setDeleting(true)}>
               <Icon name="trash" size={14} /> delete workout
             </button>
@@ -175,6 +184,7 @@ function SessionCard({
         />
       ) : null}
       {noting ? <EditSessionNote session={session} onClose={() => setNoting(false)} /> : null}
+      {dating ? <EditSessionDate session={session} onClose={() => setDating(false)} /> : null}
       {deleting ? (
         <ConfirmDeleteSession session={session} label={label} onClose={() => setDeleting(false)} />
       ) : null}

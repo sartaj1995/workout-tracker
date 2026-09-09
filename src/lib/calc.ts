@@ -211,6 +211,27 @@ export function startOfDay(ts: number): number {
   return d.getTime()
 }
 
+/** yyyy-mm-dd in local time, which is what <input type="date"> speaks. */
+export function isoDay(ts: number): string {
+  const d = new Date(ts)
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * A timestamp for a day you're picking rather than living through.
+ *
+ * Today keeps the actual clock time, so a session logged now sorts after one
+ * logged this morning. Any other day lands at six in the evening — a made-up
+ * time, but a plausible one, and it keeps a backdated workout ahead of an
+ * activity logged the same day rather than interleaving them arbitrarily.
+ */
+export function timeOnDay(day: string, now = Date.now()): number {
+  if (isoDay(now) === day) return now
+  const picked = new Date(`${day}T00:00:00`)
+  return picked.setHours(18, 0, 0, 0)
+}
+
 export function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 }

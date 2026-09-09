@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isoDay, timeOnDay } from '../lib/calc'
 import { useStore } from '../lib/store'
 import { Icon } from './Icon'
 import { Sheet } from './ui'
@@ -17,12 +18,6 @@ const SUGGESTIONS = [
   'Yoga',
 ]
 
-const isoDay = (ts: number) => {
-  const d = new Date(ts)
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
-  return d.toISOString().slice(0, 10)
-}
-
 export function LogActivity({ onClose }: { onClose: () => void }) {
   const store = useStore()
   const [name, setName] = useState('')
@@ -34,14 +29,7 @@ export function LogActivity({ onClose }: { onClose: () => void }) {
 
   function save() {
     if (!trimmed) return
-    // Keep the current time of day when it's today, so ordering stays sensible.
-    const picked = new Date(`${day}T00:00:00`)
-    const now = new Date()
-    const at =
-      isoDay(now.getTime()) === day
-        ? now.getTime()
-        : picked.setHours(18, 0, 0, 0)
-    store.addActivity(trimmed, at, minutes ? Number(minutes) : undefined)
+    store.addActivity(trimmed, timeOnDay(day), minutes ? Number(minutes) : undefined)
     onClose()
   }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { cloneSet, emptySet, isLogged, isTouched, score, topScore } from './calc'
+import { cloneSet, emptySet, isLogged, isTouched, isoDay, score, timeOnDay, topScore } from './calc'
 import { pickKey, resolveDay } from './plan'
 import { StoreCtx, type Store } from './store'
 import { freshState, loadState, mergeFromNotes, saveState } from './storage'
@@ -31,6 +31,16 @@ function startingSets(state: AppState, def: ExerciseDef): WorkSet[] {
  * exercises an edit could have touched; one with no sessions left keeps the
  * seed it has, which is its starting number from the notes.
  */
+/**
+ * Newest first.
+ *
+ * Not cosmetic. Home reads "last trained" with `sessions.find(s => s.day === d)`
+ * and the rotation ranks days by it, so a session whose date moved has to be
+ * re-sorted or the home screen quietly reports the wrong thing.
+ */
+const byNewest = (list: Session[]): Session[] =>
+  [...list].sort((a, b) => (b.finishedAt ?? b.startedAt) - (a.finishedAt ?? a.startedAt))
+
 function reseed(state: AppState, ids: string[]): Record<string, WorkSet[]> {
   const when = (s: Session) => s.finishedAt ?? s.startedAt
   const newestFirst = [...state.sessions].sort((a, b) => when(b) - when(a))
@@ -103,22 +113,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       discardSession: () => update((s) => ({ ...s, active: null })),
 
-      finishSession: (note) =>
+      /**
+       * `day` reconstructs a workout you did but didn't log — you tap it in
+       * from memory now and say which day it was.
+       *
+       * A reconstructed one keeps no duration. The minutes it took to type in
+       * aren't the minutes it took to do, and "Duration 2:14" against a real
+       * session is worse than admitting the time is unknown.
+       */
+      finishSession: (note, day) =>
         update((s) => {
           if (!s.active) return s
           const entries = s.active.entries
             .map((e) => ({ ...e, sets: e.sets.filter((set) => isLogged(set, defs[e.exerciseId])) }))
             .filter((e) => e.sets.length > 0)
           if (entries.length === 0) return { ...s, active: null }
+
+          const backdated = day !== undefined && day !== isoDay(Date.now())
           const done: Session = {
             ...s.active,
             entries,
-            finishedAt: Date.now(),
+            startedAt: day ? timeOnDay(day) : s.active.startedAt,
+            finishedAt: backdated ? undefined : Date.now(),
             note: note?.trim() || undefined,
           }
-          const seeds = { ...s.seeds }
-          for (const e of entries) seeds[e.exerciseId] = e.sets.map(cloneSet)
-          return { ...s, active: null, seeds, sessions: [done, ...s.sessions] }
+          // Through reseed rather than straight assignment: a session logged
+          // for last Tuesday must not become the prefill when this Friday's is
+          // already on record.
+          const sessions = byNewest([done, ...s.sessions])
+          return {
+            ...s,
+            active: null,
+            sessions,
+            seeds: reseed({ ...s, sessions }, entries.map((e) => e.exerciseId)),
+          }
         }),
 
       /**
@@ -141,10 +169,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             ...before.entries.map((e) => e.exerciseId),
             ...entries.map((e) => e.exerciseId),
           ]
-          const sessions =
+          const sessions = byNewest(
             entries.length === 0
               ? s.sessions.filter((x) => x.id !== edited.id)
-              : s.sessions.map((x) => (x.id === edited.id ? { ...edited, entries } : x))
+              : s.sessions.map((x) => (x.id === edited.id ? { ...edited, entries } : x)),
+          )
           return { ...s, sessions, seeds: reseed({ ...s, sessions }, touched) }
         }),
 

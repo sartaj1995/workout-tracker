@@ -103,6 +103,27 @@ can correct a number you mistyped, add the set you forgot to tick off, remove
 an exercise from that day, or delete the workout outright. Clearing a set's
 numbers removes the set; removing the last exercise removes the workout.
 
+**The date is editable too**, from *change date* on the same expanded card.
+Both timestamps move together by whole days, so a duration that was actually
+measured survives the move. It's worth being careful with: your streak, the
+eight-week grid, "last trained" and which session comes up next all read from
+these dates.
+
+### A workout you forgot to log
+
+Start the day as normal, tap in what you did from memory, and set **Date** in
+the finish sheet to the day it happened. It defaults to today, so it stays out
+of the way the rest of the time.
+
+A workout logged this way carries **no duration**. The minutes it took to type
+in aren't the minutes it took to do, and a made-up duration sitting beside real
+ones is worse than admitting the time is unknown.
+
+It also won't become next session's prefill unless it deserves to be. Prefills
+come from the newest session holding that exercise, so reconstructing last
+Tuesday leaves this Friday's numbers in charge — and moving a date around
+recomputes which session wins.
+
 The prefill follows the correction. A seed — the ghost numbers you see next
 session — is only ever "whatever the latest session said", so fixing a wrong
 number moves it too. Otherwise next week's ghosts would still show the mistake,
