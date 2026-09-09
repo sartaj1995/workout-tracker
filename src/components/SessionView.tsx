@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatClock, formatSets, plural } from '../lib/calc'
+import { formatClock, formatSets, isoDay, plural } from '../lib/calc'
 import { primeToken } from '../lib/drive'
 import { resolveDay } from '../lib/plan'
 import { useStore } from '../lib/store'
@@ -17,6 +17,7 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
   const [showExtras, setShowExtras] = useState(false)
   const [confirmFinish, setConfirmFinish] = useState(false)
   const [note, setNote] = useState('')
+  const [logDay, setLogDay] = useState(() => isoDay(Date.now()))
   const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
@@ -126,6 +127,25 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
             placeholder="How did it go? Optional — slept badly, shoulder twinged, felt strong."
             style={{ minHeight: 62 }}
           />
+          {/* Almost always today, so it sits under the note rather than in
+              the way. It's here for the session you did and forgot to log. */}
+          <div className="setting" style={{ marginTop: 4 }}>
+            <label htmlFor="finish-day">
+              Date
+              <small>
+                {logDay === isoDay(Date.now()) ? 'Today' : 'Logging this for a past day'}
+              </small>
+            </label>
+            <input
+              id="finish-day"
+              type="date"
+              style={{ width: 150 }}
+              value={logDay}
+              max={isoDay(Date.now())}
+              onChange={(e) => setLogDay(e.target.value || isoDay(Date.now()))}
+            />
+          </div>
+
           <div className="row" style={{ marginTop: 6 }}>
             <button className="btn ghost" onClick={() => setConfirmFinish(false)}>
               Keep going
@@ -138,7 +158,7 @@ export function SessionView({ rest, onExit }: { rest: RestTimer; onExit: () => v
                 // the backup that follows needs a live Google token, and the
                 // old one has almost certainly expired during the workout.
                 primeToken()
-                store.finishSession(note)
+                store.finishSession(note, logDay)
                 rest.stop()
                 setConfirmFinish(false)
                 onExit()

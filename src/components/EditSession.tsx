@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { emptySet, unitLabel } from '../lib/calc'
+import { emptySet, formatDate, isoDay, timeOnDay, unitLabel } from '../lib/calc'
 import { useStore } from '../lib/store'
 import type { ExerciseDef, Session, WorkSet } from '../lib/types'
 import { Icon } from './Icon'
@@ -179,6 +179,73 @@ export function EditExercise({
           </div>
         </Sheet>
       ) : null}
+    </Sheet>
+  )
+}
+
+/**
+ * Correcting which day a workout happened on.
+ *
+ * Both timestamps move together by whole days, so a duration that was actually
+ * measured survives the correction — unlike a reconstructed workout, which
+ * never had one. Getting this wrong is quiet: the streak, the eight-week grid,
+ * "last trained" and which day comes up next all read from these.
+ */
+export function EditSessionDate({
+  session,
+  onClose,
+}: {
+  session: Session
+  onClose: () => void
+}) {
+  const store = useStore()
+  const [day, setDay] = useState(() => isoDay(session.startedAt))
+  const moved = day !== isoDay(session.startedAt)
+
+  return (
+    <Sheet title="Which day was this?" onClose={onClose}>
+      <p className="small muted" style={{ marginTop: 0 }}>
+        Currently {formatDate(session.startedAt)}. Moving it changes your streak, the eight-week
+        grid and which session comes up next — everything logged in it stays exactly as it is.
+      </p>
+
+      <div className="setting">
+        <label htmlFor="session-day">Date</label>
+        <input
+          id="session-day"
+          type="date"
+          style={{ width: 150 }}
+          value={day}
+          max={isoDay(Date.now())}
+          onChange={(e) => setDay(e.target.value || isoDay(session.startedAt))}
+        />
+      </div>
+
+      <div className="row" style={{ marginTop: 12 }}>
+        <button className="btn ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <div className="spacer" />
+        <button
+          className="btn primary"
+          disabled={!moved}
+          onClick={() => {
+            const started = timeOnDay(day)
+            store.saveSession({
+              ...session,
+              startedAt: started,
+              // Shift the end by the same amount so a real duration survives.
+              finishedAt:
+                session.finishedAt === undefined
+                  ? undefined
+                  : started + (session.finishedAt - session.startedAt),
+            })
+            onClose()
+          }}
+        >
+          Save
+        </button>
+      </div>
     </Sheet>
   )
 }
