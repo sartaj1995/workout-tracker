@@ -85,6 +85,17 @@ button {
   touch-action: manipulation;
 }
 
+/*
+ * Nothing styled the disabled state, so eight buttons across the app looked
+ * fully tappable while doing nothing — the export with no workouts to export,
+ * "Review changes" before you've changed anything, "Save" on a date you
+ * haven't moved. The attribute was already right; only the appearance lied.
+ */
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 input,
 select,
 textarea {

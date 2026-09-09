@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { plateBreakdown } from '../lib/calc'
 import { useStore } from '../lib/store'
+import { countRows, downloadCsv } from '../lib/csv'
 import { downloadBackup, freshState, readBackup } from '../lib/storage'
 import { DriveCard } from './DriveCard'
 import { NotesEditor } from './NotesEditor'
@@ -163,6 +164,23 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
         <button className="btn block" style={{ marginTop: 8 }} onClick={() => fileRef.current?.click()}>
           <Icon name="upload" size={17} /> Import backup
         </button>
+        <button
+          className="btn block"
+          style={{ marginTop: 8 }}
+          disabled={store.state.sessions.length === 0}
+          onClick={() => {
+            downloadCsv(store.state)
+            setStatus(
+              `Exported ${countRows(store.state)} rows from ${store.state.sessions.length} workouts.`,
+            )
+          }}
+        >
+          <Icon name="layers" size={17} /> Export sets as CSV
+        </button>
+        <p className="tiny muted" style={{ marginBottom: 0 }}>
+          One row per set for a spreadsheet — every workout, oldest first. The JSON backup above is
+          the one to keep; this one is for looking at.
+        </p>
         <input
           ref={fileRef}
           type="file"

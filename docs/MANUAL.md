@@ -295,6 +295,26 @@ Data lives in `localStorage`, so clearing your browser data erases it.
 Under **Settings → Your data**, **Export backup** writes a JSON file and
 **Import backup** restores it.
 
+### Taking the data elsewhere
+
+**Settings → Export sets as CSV** writes one row per set, oldest first, for a
+spreadsheet. That grain is deliberate: a set is the atomic thing this app
+records, and a session's volume, an exercise's best or a month's tonnage are
+all a pivot away from it. Anything coarser would bake one summary in and throw
+the rest away.
+
+Drop sets get their own rows, flagged in `kind` and carrying their parent's set
+number. They count towards volume but not towards a score, and separate rows
+are the only shape that lets a spreadsheet honour both.
+
+The `score` and `volume_kg` columns carry the app's own rules rather than
+leaving you to rebuild them — Epley, drops excluded from scoring, per-side work
+doubled, plate-numbered and timed exercises left out of the kilo total. Sum
+`volume_kg` for a date and you get exactly what the Workload chart shows.
+
+It's an export, not a backup: nothing reads a CSV back in. The JSON backup is
+still the one to keep.
+
 ---
 
 ## Backing up to Google Drive
