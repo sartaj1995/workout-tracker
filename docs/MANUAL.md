@@ -117,6 +117,15 @@ measured survives the move. It's worth being careful with: your streak, the
 eight-week grid, "last trained" and which session comes up next all read from
 these dates.
 
+**Deleting one is undoable for eight seconds.** A bar appears with the workout
+you removed and an *Undo* button; past that, only a backup brings it back. The
+confirmation before it stays, because it tells you what's at stake — how many
+sets go, and that the charts lose those points.
+
+Undo puts the prefills back too, not just the row. Deleting the newest session
+holding an exercise moves its ghost numbers to the one before it, so restoring
+the session has to move them again.
+
 ### A workout you forgot to log
 
 Start the day as normal, tap in what you did from memory, and set **Date** in

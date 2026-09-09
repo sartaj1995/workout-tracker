@@ -177,6 +177,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return { ...s, sessions, seeds: reseed({ ...s, sessions }, touched) }
         }),
 
+      /**
+       * Put a deleted workout back exactly as it was.
+       *
+       * The inverse of deleteSession, down to running the same reseed: a
+       * delete can move a prefill (the newest session holding an exercise may
+       * have been the one that went), so putting the session back has to move
+       * it again. Restoring the row without that would leave the workout
+       * visible in History and the ghosts on the next session still wrong.
+       */
+      restoreSession: (session) =>
+        update((s) => {
+          if (s.sessions.some((x) => x.id === session.id)) return s
+          const sessions = byNewest([session, ...s.sessions])
+          return {
+            ...s,
+            sessions,
+            seeds: reseed({ ...s, sessions }, session.entries.map((e) => e.exerciseId)),
+          }
+        }),
+
       deleteSession: (id) =>
         update((s) => {
           const gone = s.sessions.find((x) => x.id === id)

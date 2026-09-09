@@ -1271,6 +1271,91 @@ textarea {
 
 /* ============ bottom bars ============ */
 
+/*
+ * Undo toast. Sits where the rest bar sits — above the tab bar, clear of the
+ * safe area — because that's already the app's shelf for transient controls.
+ */
+.undo {
+  position: fixed;
+  left: var(--s-3);
+  right: var(--s-3);
+  bottom: calc(76px + var(--safe-b));
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px 10px 10px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 50%);
+  max-width: 596px;
+  margin: 0 auto;
+  overflow: hidden;
+  animation: undo-in 0.2s var(--ease-out);
+}
+
+/* Stack above the rest bar rather than covering it, on the rare occasion a
+   workout is running while you're deleting an old one from History. */
+body:has(.rest) .undo {
+  bottom: calc(140px + var(--safe-b));
+}
+
+.undo__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+/* A real 44px target, not a text link — it's the whole point of the toast. */
+.undo__action {
+  flex: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  border: 1px solid var(--primary);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.undo__action:active {
+  background: color-mix(in srgb, var(--primary) 34%, transparent);
+}
+
+/* Shows the window closing. scaleX rather than width, so it stays off the
+   layout path. */
+.undo__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--primary);
+  transform-origin: left;
+  animation: undo-drain 8s linear forwards;
+}
+
+@keyframes undo-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes undo-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 .tabbar {
   position: fixed;
   bottom: 0;
@@ -1769,5 +1854,12 @@ textarea {
      only signal that a timer is running, so pin it back to fully visible. */
   .timing__dot {
     opacity: 1 !important;
+  }
+
+  /* Same problem, worse reading: the drain bar would snap to empty the instant
+     it appeared, saying the undo window had already closed when it hasn't.
+     The toast still dismisses on its own timer. */
+  .undo__bar {
+    display: none;
   }
 }

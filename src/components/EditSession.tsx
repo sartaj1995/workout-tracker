@@ -290,10 +290,13 @@ export function ConfirmDeleteSession({
   session,
   label,
   onClose,
+  onDeleted,
 }: {
   session: Session
   label: string
   onClose: () => void
+  /** Handed the deleted session so the caller can offer to put it back. */
+  onDeleted: (session: Session) => void
 }) {
   const store = useStore()
   const sets = session.entries.reduce((n, e) => n + e.sets.length, 0)
@@ -301,8 +304,8 @@ export function ConfirmDeleteSession({
   return (
     <Sheet title={`Delete this ${label} workout?`} onClose={onClose}>
       <p className="small muted" style={{ marginTop: 0 }}>
-        {sets} logged {sets === 1 ? 'set' : 'sets'} go with it, and the charts lose these points.
-        There's no undo — export a backup first if you're unsure.
+        {sets} logged {sets === 1 ? 'set goes' : 'sets go'} with it, and the charts lose these points.
+        You'll get a moment to undo afterwards; past that, only a backup brings it back.
       </p>
       <div className="row">
         <button className="btn ghost" onClick={onClose}>
@@ -314,6 +317,7 @@ export function ConfirmDeleteSession({
           onClick={() => {
             store.deleteSession(session.id)
             onClose()
+            onDeleted(session)
           }}
         >
           Delete workout

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { formatClock, formatDate, formatSets, plural, sessionVolume, startOfDay } from '../lib/calc'
 import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
@@ -15,6 +15,9 @@ import { Icon } from './Icon'
 export function HistoryView() {
   const store = useStore()
   const [open, setOpen] = useState<string | null>(null)
+  // Held here rather than on the card, because the card is the thing that just
+  // vanished — an undo living inside it would go with it.
+  const [undo, setUndo] = useState<Session | null>(null)
   const { sessions, activities } = store.state
 
   if (sessions.length === 0 && activities.length === 0) {
@@ -50,6 +53,17 @@ export function HistoryView() {
       </div>
 
       <div className="section-title">Everything you've done</div>
+      {undo ? (
+        <UndoDelete
+          session={undo}
+          onUndo={() => {
+            store.restoreSession(undo)
+            setUndo(null)
+          }}
+          onDismiss={() => setUndo(null)}
+        />
+      ) : null}
+
       {timeline.map((row) =>
         row.session ? (
           <SessionCard
@@ -57,11 +71,57 @@ export function HistoryView() {
             session={row.session}
             open={open === row.session.id}
             onToggle={() => setOpen(open === row.session!.id ? null : row.session!.id)}
+            onDeleted={setUndo}
           />
         ) : (
           <ActivityCard key={row.activity.id} activity={row.activity} />
         ),
       )}
+    </div>
+  )
+}
+
+/**
+ * The window in which a delete is still a mistake rather than a decision.
+ *
+ * Eight seconds rather than the three-to-five a plain toast gets: this one
+ * carries an action, so it has to be read, understood and acted on, not just
+ * noticed. Long enough to catch "that was the wrong card", short enough that
+ * it isn't sitting there as clutter.
+ */
+const UNDO_MS = 8000
+
+function UndoDelete({
+  session,
+  onUndo,
+  onDismiss,
+}: {
+  session: Session
+  onUndo: () => void
+  onDismiss: () => void
+}) {
+  useEffect(() => {
+    const id = setTimeout(onDismiss, UNDO_MS)
+    return () => clearTimeout(id)
+    // Keyed by session id at the call site, so a second delete restarts this.
+  }, [session.id, onDismiss])
+
+  const label = DAYS.find((d) => d.id === session.day)?.label ?? session.day
+
+  return (
+    // role="status" announces it without pulling focus away from the list.
+    <div className="undo" role="status" aria-live="polite">
+      <span className="undo__text">
+        {label} workout from {formatDate(session.startedAt)} deleted
+      </span>
+      <button
+        className="undo__action"
+        onClick={onUndo}
+        aria-label={`Undo deleting the ${label} workout from ${formatDate(session.startedAt)}`}
+      >
+        Undo
+      </button>
+      <span className="undo__bar" aria-hidden="true" />
     </div>
   )
 }
@@ -95,10 +155,12 @@ function SessionCard({
   session,
   open,
   onToggle,
+  onDeleted,
 }: {
   session: Session
   open: boolean
   onToggle: () => void
+  onDeleted: (session: Session) => void
 }) {
   const store = useStore()
   const [editing, setEditing] = useState<string | null>(null)
@@ -186,7 +248,12 @@ function SessionCard({
       {noting ? <EditSessionNote session={session} onClose={() => setNoting(false)} /> : null}
       {dating ? <EditSessionDate session={session} onClose={() => setDating(false)} /> : null}
       {deleting ? (
-        <ConfirmDeleteSession session={session} label={label} onClose={() => setDeleting(false)} />
+        <ConfirmDeleteSession
+          session={session}
+          label={label}
+          onClose={() => setDeleting(false)}
+          onDeleted={onDeleted}
+        />
       ) : null}
     </div>
   )
