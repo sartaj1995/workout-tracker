@@ -249,11 +249,11 @@ paper notebook already does better. So the prompts were things like *"the
 numbers should already be there"* and *"a fresh phone must never overwrite the
 backup"* — decisions about behaviour, not instructions about code.
 
-It's an honest look at where that gets you: about four thousand lines of
-TypeScript with two runtime dependencies (React and React DOM), no component
-library, no state library, no test suite, and a hand-rolled service worker. It's
-also unapologetically single-user software — built for one routine, one phone,
-one person. That's exactly why it's pleasant to use, and exactly why you should
+It's an honest look at where that gets you: six thousand lines of TypeScript
+with two runtime dependencies (React and React DOM), no component library, no
+state library, no test suite, and a hand-rolled service worker. It's also
+unapologetically single-user software — built for one routine, one phone, one
+person. That's exactly why it's pleasant to use, and exactly why you should
 fork it rather than sign up for it.
 
 **If you want your own version of this**, that's the whole method: open Claude
