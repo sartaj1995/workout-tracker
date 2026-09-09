@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatSets, isLogged, isStalled, plural, score, sessionsSinceBest, suggestion, unitLabel } from '../lib/calc'
+import {
+  formatClock,
+  formatSets,
+  isLogged,
+  isStalled,
+  plural,
+  score,
+  sessionsSinceBest,
+  suggestion,
+  unitLabel,
+} from '../lib/calc'
 import { useStore } from '../lib/store'
 import type { DayId, ExerciseDef, WorkSet } from '../lib/types'
 import { Icon } from './Icon'
@@ -48,6 +58,45 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
   // the same weight you've loaded the last five times without thinking.
   const history = store.historyFor(def.id)
   const stalled = isStalled(history)
+
+  /**
+   * Timing a hold.
+   *
+   * Held as the wall-clock moment it started rather than a running total, so
+   * the count is correct whatever the page was doing in between — a locked
+   * screen or a backgrounded tab throttles the interval, but the arithmetic
+   * doesn't care. Only one at a time: you can't hold two things at once.
+   */
+  const [timing, setTiming] = useState<{ index: number; from: number } | null>(null)
+  const [, tick] = useState(0)
+
+  useEffect(() => {
+    if (!timing) return
+    const id = setInterval(() => tick((n) => n + 1), 250)
+    return () => clearInterval(id)
+  }, [timing])
+
+  const elapsed = timing ? Math.max(0, Math.round((Date.now() - timing.from) / 1000)) : 0
+  /** Confirmations, not decoration — one short buzz at each end of a hold. */
+  const buzz = () => {
+    if (store.state.prefs.vibrateOn) navigator.vibrate?.(12)
+  }
+
+  function startTiming(i: number) {
+    buzz()
+    setTiming({ index: i, from: Date.now() })
+  }
+
+  /** Stopping is the set finishing, so it fills the number and ticks it off. */
+  function stopTiming() {
+    if (!timing) return
+    const secs = Math.max(1, Math.round((Date.now() - timing.from) / 1000))
+    const i = timing.index
+    setTiming(null)
+    buzz()
+    store.patchSet(def.id, i, { seconds: secs, done: true })
+    onLogged()
+  }
 
   const unit = unitLabel(def)
   const showWeight = def.metric === 'weight_reps' || def.metric === 'weight_time'
@@ -164,6 +213,21 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
                   step={1}
                 />
               ) : null}
+              {/*
+                A hold can't be counted in your head while you're doing it, so
+                the seconds field gets a stopwatch beside it. Same 48px target
+                as the tick, and manual entry stays — you still want to type a
+                number in when correcting one.
+              */}
+              {showSecs && !timing ? (
+                <button
+                  className="check timer-btn"
+                  aria-label={`Start timing set ${i + 1}`}
+                  onClick={() => startTiming(i)}
+                >
+                  <Icon name="timer" size={20} />
+                </button>
+              ) : null}
               <button
                 className={`check${set.done ? ' on' : ''}`}
                 aria-label={`Set ${i + 1} done`}
@@ -172,6 +236,21 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
                 <Icon name="check" size={20} />
               </button>
             </div>
+
+            {/*
+              Running, it takes the whole width. You're mid-hold and probably
+              not looking carefully, so the thing to tap is the size of the row
+              rather than an icon in the corner.
+            */}
+            {timing?.index === i ? (
+              <button className="timing" onClick={stopTiming} aria-label={`Stop timing set ${i + 1}`}>
+                <span className="timing__dot" aria-hidden="true" />
+                <span className="timing__clock" role="timer" aria-live="off">
+                  {formatClock(elapsed)}
+                </span>
+                <span className="timing__hint">Tap to stop</span>
+              </button>
+            ) : null}
 
             {set.drops.map((drop, di) => (
               <div className="drop-row" key={di}>

@@ -849,6 +849,75 @@ textarea {
   transform: scale(0.94);
 }
 
+/* Same 48px target as the tick beside it, one step quieter so the tick still
+   reads as the primary action on the row. */
+.timer-btn {
+  color: var(--muted);
+}
+
+.timer-btn:active {
+  background: var(--surface-3, var(--surface-2));
+}
+
+/*
+ * The running state. Full row width because it's tapped mid-hold, and the
+ * clock is the only thing that has to be readable from arm's length.
+ */
+.timing {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: calc(100% - 8px);
+  margin: 2px 4px 6px;
+  min-height: 52px;
+  padding: 8px 14px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--dc, var(--primary)) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dc, var(--primary)) 52%, transparent);
+  color: var(--text);
+  text-align: left;
+}
+
+.timing:active {
+  background: color-mix(in srgb, var(--dc, var(--primary)) 26%, transparent);
+}
+
+.timing__dot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--dc, var(--primary));
+  animation: pulse-dot 1.6s var(--ease-out) infinite;
+}
+
+.timing__clock {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1;
+  /* Tabular, or every tick past 1:11 shifts the row a pixel sideways. */
+  font-variant-numeric: tabular-nums;
+}
+
+.timing__hint {
+  margin-left: auto;
+  font-size: 12.5px;
+  /* Not plain --muted: this sits on the tinted bar rather than the card, which
+     lands muted text exactly on 4.5:1 with no margin. Lifted towards --text so
+     small copy keeps some headroom. */
+  color: color-mix(in srgb, var(--text) 55%, var(--muted));
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
 .drop-row {
   display: flex;
   align-items: center;
@@ -1603,5 +1672,12 @@ textarea {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* The rule above collapses the pulse to a single 0.01ms frame, which can
+     leave the dot stopped at whatever opacity that frame lands on. It's the
+     only signal that a timer is running, so pin it back to fully visible. */
+  .timing__dot {
+    opacity: 1 !important;
   }
 }
