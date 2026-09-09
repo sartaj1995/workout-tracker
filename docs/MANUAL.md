@@ -45,6 +45,13 @@ Machines numbered by plate rather than kilos, and lifts measured in reps or
 seconds instead of weight, are listed in `OVERRIDES` at the bottom of the same
 file.
 
+Anything measured in seconds gets a **stopwatch** beside its set, since you
+can't count a wall sit in your head while you're in it. Tap it to start; the
+row turns into a large clock you tap anywhere to stop. Stopping writes the
+seconds in and ticks the set off, which starts your rest — you shouldn't have
+to go hunting for the tick the moment you come off the bar. Typing a number in
+by hand still works, for when you're correcting one.
+
 Edit, redeploy, and the app picks the changes up on its own — it fingerprints
 the notes and rebuilds the catalog when they differ. **Settings → Reload
 exercises from notes** forces the same thing. Everything you've logged is left
@@ -343,6 +350,12 @@ deliberately do both: log a set on one, then tap the other.
 **first** is the one offered by default. Because the notes decide that, editing
 them clears any choice you'd swapped to inside the app — otherwise an old in-app
 pick would quietly override the order you just wrote.
+
+**The set stopwatch counts from the wall clock.** It stores the moment you
+started rather than a running total, so the number is right no matter what the
+page was doing in between — a locked screen or a backgrounded tab throttles the
+interval that repaints it, but not the subtraction. It needs no sound, which is
+why it doesn't share the rest alert's problems below.
 
 **Rest alerts fire from the audio clock.** The beep is scheduled when rest
 *starts* rather than played when a timer notices zero — a backgrounded page has

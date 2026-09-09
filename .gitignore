@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python bytecode, e.g. from running the bundled skill scripts
+__pycache__/
+*.pyc
