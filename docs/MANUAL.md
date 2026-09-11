@@ -47,11 +47,24 @@ seconds instead of weight, are listed in `OVERRIDES` at the bottom of the same
 file.
 
 Anything measured in seconds gets a **stopwatch** beside its set, since you
-can't count a wall sit in your head while you're in it. Tap it to start; the
-row turns into a large clock you tap anywhere to stop. Stopping writes the
-seconds in and ticks the set off, which starts your rest — you shouldn't have
-to go hunting for the tick the moment you come off the bar. Typing a number in
-by hand still works, for when you're correcting one.
+can't count a wall sit in your head while you're in it. Tapping it doesn't
+start counting straight away — it starts a **get-ready countdown**, five
+seconds by default, silent at first and then ticking on the last three with a
+higher tone for *go*. That's your time to get to the bar. Tapping again before
+*go* cancels, and records nothing.
+
+Once it's counting, the row is a large clock you tap anywhere to stop. Walking
+back to the phone is part of that span, so a fixed **trim** comes off the end —
+two seconds by default. Both numbers live in **Settings → Timed holds**, and
+`0` turns either off.
+
+Stopping writes the seconds in and ticks the set off, which starts your rest —
+you shouldn't have to go hunting for the tick the moment you come off the bar.
+The number is always rounded **down**, because it feeds your best-hold chart
+and an error there should lean towards under-crediting rather than inventing a
+best you never held. A hold with under a second left after the trim records
+nothing at all, rather than a zero that would look ticked and then vanish when
+the workout saves. Typing a number in by hand still works, for correcting one.
 
 Edit, redeploy, and the app picks the changes up on its own — it fingerprints
 the notes and rebuilds the catalog when they differ. **Settings → Reload
@@ -406,8 +419,14 @@ pick would quietly override the order you just wrote.
 **The set stopwatch counts from the wall clock.** It stores the moment you
 started rather than a running total, so the number is right no matter what the
 page was doing in between — a locked screen or a backgrounded tab throttles the
-interval that repaints it, but not the subtraction. It needs no sound, which is
-why it doesn't share the rest alert's problems below.
+interval that repaints it, but not the subtraction.
+
+**The hold countdown uses sound, and unlike the rest alert it is reliable.**
+The same technique — tones handed to the audio clock ahead of time — with the
+opposite outcome. Five seconds fired from a tap, with the page in front of you
+and the screen held awake, never lasts long enough to reach the suspension that
+breaks the alert below. That difference is why the two live in separate
+modules rather than sharing one.
 
 **Rest alerts fire from the audio clock.** The beep is scheduled when rest
 *starts* rather than played when a timer notices zero — a backgrounded page has

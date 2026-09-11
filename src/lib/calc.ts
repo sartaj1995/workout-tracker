@@ -213,8 +213,20 @@ export function isLogged(s: WorkSet, def: ExerciseDef): boolean {
  * Return the whole seconds to record, or null to record nothing at all.
  */
 export function heldSeconds(goAt: number, stoppedAt: number, trim: number): number | null {
-  // TODO(human)
-  throw new Error(`heldSeconds(${goAt}, ${stoppedAt}, ${trim}) is not implemented yet`)
+  const held = (stoppedAt - goAt) / 1000 - trim
+
+  // Floor rather than round, because this number feeds the best-hold chart and
+  // the stall count: an error has to lean towards under-crediting. Rounding
+  // 33.6 up to 34 invents a best you never held and then can't repeat, and a
+  // chart that drifts upwards on rounding alone is worse than one a fraction
+  // low.
+  //
+  // Under a second left is a mis-tap, not a set. Recording 0 would be worse
+  // than recording nothing: isLogged treats a zero-second hold as unlogged and
+  // drops it when the workout saves, so the set would sit there looking ticked
+  // until it quietly wasn't. Returning null leaves the set untouched and
+  // re-timeable.
+  return held >= 1 ? Math.floor(held) : null
 }
 
 export function relativeDay(ts: number, now = Date.now()): string {
