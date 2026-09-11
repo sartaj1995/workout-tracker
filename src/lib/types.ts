@@ -94,6 +94,16 @@ export interface Prefs {
   weightStep: number
   /** Hit this many reps on a set and the app suggests adding weight. */
   repCeiling: number
+  /**
+   * Seconds between tapping a hold's stopwatch and it starting to count — the
+   * time it takes to get onto the bar. 0 starts it immediately.
+   */
+  holdCountdown: number
+  /**
+   * Seconds knocked off the end of a hold for getting back to the phone,
+   * which a tap-to-stop always includes. 0 records the full span.
+   */
+  holdTrim: number
 }
 
 /** One line of a day's plan: which exercise, and whether it's optional there. */

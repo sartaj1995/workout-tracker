@@ -203,6 +203,20 @@ export function isLogged(s: WorkSet, def: ExerciseDef): boolean {
   return (s.reps ?? 0) > 0
 }
 
+/**
+ * How many seconds a hold actually lasted, to be written against the set.
+ *
+ * `goAt` is when the countdown said go and `stoppedAt` is when you tapped
+ * stop, both in milliseconds. `trim` is in seconds: the time it takes to get
+ * from the bar back to the phone, which a tap-to-stop span always includes.
+ *
+ * Return the whole seconds to record, or null to record nothing at all.
+ */
+export function heldSeconds(goAt: number, stoppedAt: number, trim: number): number | null {
+  // TODO(human)
+  throw new Error(`heldSeconds(${goAt}, ${stoppedAt}, ${trim}) is not implemented yet`)
+}
+
 export function relativeDay(ts: number, now = Date.now()): string {
   const days = Math.floor((startOfDay(now) - startOfDay(ts)) / 86400000)
   if (days === 0) return 'today'

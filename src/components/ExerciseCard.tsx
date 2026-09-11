@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   formatClock,
   formatSets,
+  heldSeconds,
   isLogged,
   isStalled,
   plural,
@@ -10,6 +11,7 @@ import {
   suggestion,
   unitLabel,
 } from '../lib/calc'
+import { scheduleCountdown } from '../lib/sound'
 import { useStore } from '../lib/store'
 import type { DayId, ExerciseDef, WorkSet } from '../lib/types'
 import { Icon } from './Icon'
@@ -66,8 +68,15 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
    * the count is correct whatever the page was doing in between — a locked
    * screen or a backgrounded tab throttles the interval, but the arithmetic
    * doesn't care. Only one at a time: you can't hold two things at once.
+   *
+   * Tap-to-tap is never the hold. There's the walk to the bar at one end and
+   * the walk back to the phone at the other, and on a 35-second hang that's
+   * the difference between a record and a guess. The start is made exact by a
+   * countdown you sync to; the end can only be estimated, so it's trimmed.
    */
+  const { holdCountdown, holdTrim, soundOn, vibrateOn } = store.state.prefs
   const [timing, setTiming] = useState<{ index: number; from: number } | null>(null)
+  const cancelCues = useRef<(() => void) | null>(null)
   const [, tick] = useState(0)
 
   useEffect(() => {
@@ -76,23 +85,60 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
     return () => clearInterval(id)
   }, [timing])
 
-  const elapsed = timing ? Math.max(0, Math.round((Date.now() - timing.from) / 1000)) : 0
+  // Go's buzz can't ride the audio clock the way its tone does, but a timeout
+  // is fine for a few seconds with the page in front of you.
+  useEffect(() => {
+    if (!timing || !vibrateOn) return
+    const wait = timing.from + holdCountdown * 1000 - Date.now()
+    if (wait <= 0) return
+    const id = setTimeout(() => navigator.vibrate?.([60, 40, 60]), wait)
+    return () => clearTimeout(id)
+  }, [timing, holdCountdown, vibrateOn])
+
+  // Nothing left scheduled if the card goes away mid-countdown.
+  useEffect(() => () => cancelCues.current?.(), [])
+
+  const now = Date.now()
+  const goAt = timing ? timing.from + holdCountdown * 1000 : 0
+  const counting = timing !== null && now < goAt
+  const untilGo = counting ? Math.ceil((goAt - now) / 1000) : 0
+  // Completed seconds, the way a stopwatch shows them. What actually gets
+  // recorded is heldSeconds' decision, trim and all.
+  const elapsed = timing && !counting ? Math.floor((now - goAt) / 1000) : 0
+
   /** Confirmations, not decoration — one short buzz at each end of a hold. */
   const buzz = () => {
-    if (store.state.prefs.vibrateOn) navigator.vibrate?.(12)
+    if (vibrateOn) navigator.vibrate?.(12)
   }
 
   function startTiming(i: number) {
     buzz()
+    cancelCues.current?.()
+    cancelCues.current = soundOn ? scheduleCountdown(holdCountdown) : null
     setTiming({ index: i, from: Date.now() })
   }
 
-  /** Stopping is the set finishing, so it fills the number and ticks it off. */
+  function endTiming() {
+    cancelCues.current?.()
+    cancelCues.current = null
+    setTiming(null)
+  }
+
+  /**
+   * One target for both phases, judged by the clock at the moment of the tap
+   * rather than by what was on screen at the last render — at 4.9s the button
+   * still reads "1", but a tap landing at 5.1s is a stop, not a cancel.
+   */
   function stopTiming() {
     if (!timing) return
-    const secs = Math.max(1, Math.round((Date.now() - timing.from) / 1000))
+    const stoppedAt = Date.now()
+    const go = timing.from + holdCountdown * 1000
     const i = timing.index
-    setTiming(null)
+    endTiming()
+    // Before go, a tap means "not now" — not a hold of zero seconds.
+    if (stoppedAt < go) return
+    const secs = heldSeconds(go, stoppedAt, holdTrim)
+    if (secs === null) return
     buzz()
     store.patchSet(def.id, i, { seconds: secs, done: true })
     onLogged()
@@ -243,12 +289,24 @@ export function ExerciseCard({ day, def, sets, prev, members, onLogged }: Props)
               rather than an icon in the corner.
             */}
             {timing?.index === i ? (
-              <button className="timing" onClick={stopTiming} aria-label={`Stop timing set ${i + 1}`}>
+              <button
+                className={`timing${counting ? ' timing--ready' : ''}`}
+                onClick={stopTiming}
+                aria-label={
+                  counting ? `Cancel — set ${i + 1} starts in ${untilGo}` : `Stop timing set ${i + 1}`
+                }
+              >
                 <span className="timing__dot" aria-hidden="true" />
                 <span className="timing__clock" role="timer" aria-live="off">
-                  {formatClock(elapsed)}
+                  {counting ? untilGo : formatClock(elapsed)}
                 </span>
-                <span className="timing__hint">Tap to stop</span>
+                <span className="timing__hint">
+                  {counting
+                    ? 'Get ready · tap to cancel'
+                    : holdTrim > 0
+                      ? `Tap to stop · last ${holdTrim}s trimmed`
+                      : 'Tap to stop'}
+                </span>
               </button>
             ) : null}
 
