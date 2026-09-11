@@ -27,6 +27,8 @@ export const DEFAULT_PREFS: Prefs = {
   keepScreenOn: true,
   weightStep: 2.5,
   repCeiling: 10,
+  holdCountdown: 5,
+  holdTrim: 2,
 }
 
 /**

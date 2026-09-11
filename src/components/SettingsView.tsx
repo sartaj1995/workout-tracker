@@ -63,6 +63,42 @@ export function SettingsView({ onTestAlert }: { onTestAlert: () => void }) {
         </p>
       </div>
 
+      <div className="section-title">Timed holds</div>
+      <div className="card">
+        <div className="setting">
+          <label htmlFor="hold-countdown">
+            Get-ready countdown
+            <small>Seconds to get onto the bar before it starts counting</small>
+          </label>
+          <input
+            id="hold-countdown"
+            type="number"
+            inputMode="numeric"
+            value={prefs.holdCountdown}
+            onChange={(e) =>
+              store.setPrefs({ holdCountdown: Math.max(0, Number(e.target.value) || 0) })
+            }
+          />
+        </div>
+        <div className="setting">
+          <label htmlFor="hold-trim">
+            Time to reach the phone
+            <small>Seconds knocked off the end, for the walk back to stop it</small>
+          </label>
+          <input
+            id="hold-trim"
+            type="number"
+            inputMode="numeric"
+            value={prefs.holdTrim}
+            onChange={(e) => store.setPrefs({ holdTrim: Math.max(0, Number(e.target.value) || 0) })}
+          />
+        </div>
+        <p className="tiny muted" style={{ marginBottom: 0 }}>
+          Either can be 0 to turn it off. The last three seconds of the countdown tick, then a
+          higher tone means go — with a buzz too, if vibration is on.
+        </p>
+      </div>
+
       <div className="section-title">Progression</div>
       <div className="card">
         <div className="setting">

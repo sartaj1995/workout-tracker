@@ -983,6 +983,25 @@ textarea {
   background: color-mix(in srgb, var(--dc, var(--primary)) 26%, transparent);
 }
 
+/*
+ * Getting ready. Amber rather than the day colour, and the hint text changes
+ * with it, so the two phases never differ by colour alone. The dot holds
+ * still: it pulses only once something is actually being counted.
+ */
+.timing--ready {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  border-color: color-mix(in srgb, var(--warn) 50%, transparent);
+}
+
+.timing--ready:active {
+  background: color-mix(in srgb, var(--warn) 24%, transparent);
+}
+
+.timing--ready .timing__dot {
+  background: var(--warn);
+  animation: none;
+}
+
 .timing__dot {
   width: 9px;
   height: 9px;
