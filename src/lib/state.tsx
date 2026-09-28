@@ -311,6 +311,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ),
         })),
 
+      updateActivity: (id, patch) =>
+        update((s) => ({
+          ...s,
+          // Re-sorted because the day is one of the things you can correct, and
+          // newest-first is the order addActivity establishes.
+          activities: s.activities
+            .map((a) => (a.id === id ? { ...a, ...patch } : a))
+            .sort((a, b) => b.at - a.at),
+        })),
+
+      /** The inverse of removeActivity, down to keeping the id. */
+      restoreActivity: (activity) =>
+        update((s) =>
+          s.activities.some((a) => a.id === activity.id)
+            ? s
+            : { ...s, activities: [activity, ...s.activities].sort((a, b) => b.at - a.at) },
+        ),
+
       removeActivity: (id) =>
         update((s) => ({ ...s, activities: s.activities.filter((a) => a.id !== id) })),
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { formatClock, formatDate, formatSets, plural, sessionVolume, startOfDay } from '../lib/calc'
 import { useStore } from '../lib/store'
 import { DAY_COLOR } from '../lib/theme'
@@ -11,17 +11,45 @@ import {
   EditSessionNote,
 } from './EditSession'
 import { Icon } from './Icon'
+import { LogActivity } from './LogActivity'
 
 export function HistoryView() {
   const store = useStore()
   const [open, setOpen] = useState<string | null>(null)
   // Held here rather than on the card, because the card is the thing that just
   // vanished — an undo living inside it would go with it.
-  const [undo, setUndo] = useState<Session | null>(null)
+  const [undo, setUndo] = useState<Undone | null>(null)
+  // Correcting one opens the very sheet that logs one, pre-filled.
+  const [editing, setEditing] = useState<Activity | null>(null)
+  // Stable, so a re-render cannot restart the toast's countdown.
+  const dismissUndo = useCallback(() => setUndo(null), [])
   const { sessions, activities } = store.state
 
+  /*
+   * Built before the empty check on purpose. Deleting your last row lands you
+   * on the empty state, and a toast that only renders when something is left
+   * would go missing exactly when the delete was most total.
+   */
+  const undoToast = undo ? (
+    <UndoDelete
+      id={undo.kind === 'session' ? undo.session.id : undo.activity.id}
+      message={undoMessage(undo)}
+      onUndo={() => {
+        if (undo.kind === 'session') store.restoreSession(undo.session)
+        else store.restoreActivity(undo.activity)
+        setUndo(null)
+      }}
+      onDismiss={dismissUndo}
+    />
+  ) : null
+
   if (sessions.length === 0 && activities.length === 0) {
-    return <div className="empty">Nothing saved yet. Finish a workout and it lands here.</div>
+    return (
+      <>
+        <div className="empty">Nothing saved yet. Finish a workout and it lands here.</div>
+        {undoToast}
+      </>
+    )
   }
 
   // The grid counts anything you did, so a squash day isn't a gap.
@@ -53,16 +81,7 @@ export function HistoryView() {
       </div>
 
       <div className="section-title">Everything you've done</div>
-      {undo ? (
-        <UndoDelete
-          session={undo}
-          onUndo={() => {
-            store.restoreSession(undo)
-            setUndo(null)
-          }}
-          onDismiss={() => setUndo(null)}
-        />
-      ) : null}
+      {undoToast}
 
       {timeline.map((row) =>
         row.session ? (
@@ -71,12 +90,22 @@ export function HistoryView() {
             session={row.session}
             open={open === row.session.id}
             onToggle={() => setOpen(open === row.session!.id ? null : row.session!.id)}
-            onDeleted={setUndo}
+            onDeleted={(deleted) => setUndo({ kind: 'session', session: deleted })}
           />
         ) : (
-          <ActivityCard key={row.activity.id} activity={row.activity} />
+          <ActivityCard
+            key={row.activity.id}
+            activity={row.activity}
+            onEdit={() => setEditing(row.activity!)}
+            onDelete={() => {
+              store.removeActivity(row.activity!.id)
+              setUndo({ kind: 'activity', activity: row.activity! })
+            }}
+          />
         ),
       )}
+
+      {editing ? <LogActivity activity={editing} onClose={() => setEditing(null)} /> : null}
     </div>
   )
 }
@@ -91,34 +120,41 @@ export function HistoryView() {
  */
 const UNDO_MS = 8000
 
+/** Either kind of thing this screen can delete. */
+type Undone =
+  | { kind: 'session'; session: Session }
+  | { kind: 'activity'; activity: Activity }
+
+function undoMessage(undone: Undone): string {
+  if (undone.kind === 'activity') {
+    return `${undone.activity.name} on ${formatDate(undone.activity.at)} deleted`
+  }
+  const label = DAYS.find((d) => d.id === undone.session.day)?.label ?? undone.session.day
+  return `${label} workout from ${formatDate(undone.session.startedAt)} deleted`
+}
+
 function UndoDelete({
-  session,
+  id,
+  message,
   onUndo,
   onDismiss,
 }: {
-  session: Session
+  /** What was deleted, so deleting a second thing restarts the countdown. */
+  id: string
+  message: string
   onUndo: () => void
   onDismiss: () => void
 }) {
   useEffect(() => {
-    const id = setTimeout(onDismiss, UNDO_MS)
-    return () => clearTimeout(id)
-    // Keyed by session id at the call site, so a second delete restarts this.
-  }, [session.id, onDismiss])
-
-  const label = DAYS.find((d) => d.id === session.day)?.label ?? session.day
+    const timer = setTimeout(onDismiss, UNDO_MS)
+    return () => clearTimeout(timer)
+  }, [id, onDismiss])
 
   return (
     // role="status" announces it without pulling focus away from the list.
     <div className="undo" role="status" aria-live="polite">
-      <span className="undo__text">
-        {label} workout from {formatDate(session.startedAt)} deleted
-      </span>
-      <button
-        className="undo__action"
-        onClick={onUndo}
-        aria-label={`Undo deleting the ${label} workout from ${formatDate(session.startedAt)}`}
-      >
+      <span className="undo__text">{message}</span>
+      <button className="undo__action" onClick={onUndo} aria-label={`Undo — ${message}`}>
         Undo
       </button>
       <span className="undo__bar" aria-hidden="true" />
@@ -126,24 +162,36 @@ function UndoDelete({
   )
 }
 
-function ActivityCard({ activity }: { activity: Activity }) {
-  const store = useStore()
+/**
+ * A logged activity, correctable in place.
+ *
+ * The row itself is the way in, rather than a pencil beside the cross — two
+ * small targets on one line is how you delete the thing you meant to edit.
+ * Workouts already read this way: you tap what you want to change.
+ */
+function ActivityCard({
+  activity,
+  onEdit,
+  onDelete,
+}: {
+  activity: Activity
+  onEdit: () => void
+  onDelete: () => void
+}) {
   return (
     <div className="card">
       <div className="hist" style={{ '--dc': 'var(--activity)' } as React.CSSProperties}>
-        <span className="hist__badge">{activity.name.slice(0, 2)}</span>
-        <span className="hist__body">
-          <span className="hist__title">{activity.name}</span>
-          <span className="hist__meta">
-            {formatDate(activity.at)}
-            {activity.minutes ? ` · ${activity.minutes} min` : ''}
+        <button className="hist__tap" onClick={onEdit} aria-label={`Edit ${activity.name}`}>
+          <span className="hist__badge">{activity.name.slice(0, 2)}</span>
+          <span className="hist__body">
+            <span className="hist__title">{activity.name}</span>
+            <span className="hist__meta">
+              {formatDate(activity.at)}
+              {activity.minutes ? ` · ${activity.minutes} min` : ''}
+            </span>
           </span>
-        </span>
-        <button
-          className="chip"
-          onClick={() => store.removeActivity(activity.id)}
-          aria-label={`Remove ${activity.name}`}
-        >
+        </button>
+        <button className="chip" onClick={onDelete} aria-label={`Remove ${activity.name}`}>
           <Icon name="x" size={14} />
         </button>
       </div>
