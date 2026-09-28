@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { isoDay, timeOnDay } from '../lib/calc'
 import { useStore } from '../lib/store'
+import type { Activity } from '../lib/types'
 import { Icon } from './Icon'
 import { Sheet } from './ui'
 
@@ -18,27 +19,52 @@ const SUGGESTIONS = [
   'Yoga',
 ]
 
-export function LogActivity({ onClose }: { onClose: () => void }) {
+/**
+ * Logging an activity, and correcting one.
+ *
+ * The same sheet does both rather than a second form for edits: the name
+ * suggestions are as useful for fixing a typo as for the first entry, and two
+ * forms would be two things to keep in step.
+ */
+export function LogActivity({
+  onClose,
+  activity,
+}: {
+  onClose: () => void
+  /** Present when correcting one that is already logged. */
+  activity?: Activity
+}) {
   const store = useStore()
-  const [name, setName] = useState('')
+  const editing = activity !== undefined
+  const [name, setName] = useState(activity?.name ?? '')
   // Defaults to today, but editable — these usually get logged the next morning.
-  const [day, setDay] = useState(isoDay(Date.now()))
-  const [minutes, setMinutes] = useState('')
+  const [day, setDay] = useState(isoDay(activity ? activity.at : Date.now()))
+  const [minutes, setMinutes] = useState(activity?.minutes ? String(activity.minutes) : '')
 
   const trimmed = name.trim()
 
   function save() {
     if (!trimmed) return
-    store.addActivity(trimmed, timeOnDay(day), minutes ? Number(minutes) : undefined)
+    const mins = minutes ? Number(minutes) : undefined
+    if (activity) {
+      // Hold the original timestamp when the day has not moved. Correcting a
+      // spelling should not quietly restamp when the thing happened.
+      const at = day === isoDay(activity.at) ? activity.at : timeOnDay(day)
+      store.updateActivity(activity.id, { name: trimmed, at, minutes: mins })
+    } else {
+      store.addActivity(trimmed, timeOnDay(day), mins)
+    }
     onClose()
   }
 
   return (
-    <Sheet title="Log an activity" onClose={onClose}>
-      <p className="small muted" style={{ marginTop: 0 }}>
-        Anything that isn't one of your gym days. It counts towards your week and streak, but
-        won't change which session is up next.
-      </p>
+    <Sheet title={editing ? 'Edit activity' : 'Log an activity'} onClose={onClose}>
+      {editing ? null : (
+        <p className="small muted" style={{ marginTop: 0 }}>
+          Anything that isn't one of your gym days. It counts towards your week and streak, but
+          won't change which session is up next.
+        </p>
+      )}
 
       <div className="ex-actions" style={{ padding: 0, marginBottom: 'var(--s-3)' }}>
         {SUGGESTIONS.map((s) => (
@@ -97,7 +123,7 @@ export function LogActivity({ onClose }: { onClose: () => void }) {
         </button>
         <div className="spacer" />
         <button className="btn primary" disabled={!trimmed} onClick={save}>
-          <Icon name="check" size={17} /> Log it
+          <Icon name="check" size={17} /> {editing ? 'Save' : 'Log it'}
         </button>
       </div>
     </Sheet>

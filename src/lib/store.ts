@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { AppState, DayId, ExerciseDef, Prefs, Session, WorkSet } from './types'
+import type { Activity, AppState, DayId, ExerciseDef, Prefs, Session, WorkSet } from './types'
 
 export interface Store {
   state: AppState
@@ -29,7 +29,11 @@ export interface Store {
   addExercise: (exerciseId: string) => void
   removeExercise: (exerciseId: string) => void
   addActivity: (name: string, at: number, minutes?: number) => void
+  /** Correct one in place — the name, the day or the minutes. */
+  updateActivity: (id: string, patch: Omit<Activity, 'id'>) => void
   removeActivity: (id: string) => void
+  /** Undo a delete, keeping the original id so it's the same row coming back. */
+  restoreActivity: (activity: Activity) => void
   setNote: (exerciseId: string, note: string) => void
   /** Mark an exercise as counting double towards workload. */
   setPerSide: (exerciseId: string, on: boolean) => void

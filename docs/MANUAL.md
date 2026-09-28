@@ -7,6 +7,7 @@ app behaves the way it does.
 - [Writing your notes](#writing-your-notes)
 - [Editing exercises in the app](#editing-exercises-in-the-app)
 - [Fixing a saved workout](#fixing-a-saved-workout)
+- [Other activities](#other-activities)
 - [How progress is scored](#how-progress-is-scored)
 - [When a lift stops moving](#when-a-lift-stops-moving)
 - [Bests](#bests)
@@ -175,6 +176,29 @@ what to change next time. It's offered when you save the workout, since that's
 the only moment you still remember, and it can be added or edited here later.
 That's separate from an exercise's note, which is a standing setup reminder
 that shows every time you train it.
+
+---
+
+## Other activities
+
+Anything that isn't one of your gym days — squash, a run, a swim. **Log another
+activity** on the home screen takes a name, a day and an optional number of
+minutes. The day is editable because these usually get logged the next morning
+rather than on the spot.
+
+They count towards your week and your streak, since you plainly trained. They
+never change which session is up next, though: a game of squash isn't a
+substitute for Push day.
+
+**Correcting one.** Tap it in History. The same sheet that logs an activity
+opens pre-filled, so the name suggestions are there for fixing a typo as much
+as for the first entry. Changing only the name leaves the timestamp exactly
+where it was — correcting a spelling shouldn't quietly restamp when the thing
+happened. Changing the day moves it, and the list re-sorts.
+
+**Deleting one** leaves eight seconds to undo, the same as a workout does, and
+the undo brings back the same row rather than a copy of it. That offer stands
+even when what you deleted was the last thing in your history.
 
 ---
 
