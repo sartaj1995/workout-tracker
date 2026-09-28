@@ -196,9 +196,12 @@ as for the first entry. Changing only the name leaves the timestamp exactly
 where it was — correcting a spelling shouldn't quietly restamp when the thing
 happened. Changing the day moves it, and the list re-sorts.
 
-**Deleting one** leaves eight seconds to undo, the same as a workout does, and
-the undo brings back the same row rather than a copy of it. That offer stands
-even when what you deleted was the last thing in your history.
+**Deleting one** asks first, then leaves eight seconds to undo — the same as a
+workout. The question is there because tapping the row opens the editor, which
+makes the cross beside it the easy thing to hit by mistake; it catches that
+before anything changes, where you're already looking. The undo is for saying
+yes about the wrong one, and brings back the same row rather than a copy. That
+offer stands even when what you deleted was the last thing in your history.
 
 ---
 

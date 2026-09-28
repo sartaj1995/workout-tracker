@@ -11,7 +11,7 @@ import {
   EditSessionNote,
 } from './EditSession'
 import { Icon } from './Icon'
-import { LogActivity } from './LogActivity'
+import { ConfirmDeleteActivity, LogActivity } from './LogActivity'
 
 export function HistoryView() {
   const store = useStore()
@@ -97,10 +97,7 @@ export function HistoryView() {
             key={row.activity.id}
             activity={row.activity}
             onEdit={() => setEditing(row.activity!)}
-            onDelete={() => {
-              store.removeActivity(row.activity!.id)
-              setUndo({ kind: 'activity', activity: row.activity! })
-            }}
+            onDeleted={(deleted) => setUndo({ kind: 'activity', activity: deleted })}
           />
         ),
       )}
@@ -172,12 +169,14 @@ function UndoDelete({
 function ActivityCard({
   activity,
   onEdit,
-  onDelete,
+  onDeleted,
 }: {
   activity: Activity
   onEdit: () => void
-  onDelete: () => void
+  onDeleted: (activity: Activity) => void
 }) {
+  const [deleting, setDeleting] = useState(false)
+
   return (
     <div className="card">
       <div className="hist" style={{ '--dc': 'var(--activity)' } as React.CSSProperties}>
@@ -191,10 +190,22 @@ function ActivityCard({
             </span>
           </span>
         </button>
-        <button className="chip" onClick={onDelete} aria-label={`Remove ${activity.name}`}>
+        <button
+          className="chip"
+          onClick={() => setDeleting(true)}
+          aria-label={`Remove ${activity.name}`}
+        >
           <Icon name="x" size={14} />
         </button>
       </div>
+
+      {deleting ? (
+        <ConfirmDeleteActivity
+          activity={activity}
+          onClose={() => setDeleting(false)}
+          onDeleted={onDeleted}
+        />
+      ) : null}
     </div>
   )
 }

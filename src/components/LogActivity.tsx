@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isoDay, timeOnDay } from '../lib/calc'
+import { formatDate, isoDay, timeOnDay } from '../lib/calc'
 import { useStore } from '../lib/store'
 import type { Activity } from '../lib/types'
 import { Icon } from './Icon'
@@ -124,6 +124,50 @@ export function LogActivity({
         <div className="spacer" />
         <button className="btn primary" disabled={!trimmed} onClick={save}>
           <Icon name="check" size={17} /> {editing ? 'Save' : 'Log it'}
+        </button>
+      </div>
+    </Sheet>
+  )
+}
+
+/**
+ * Asked before the cross on a logged activity does anything.
+ *
+ * The undo bar used to be the only guard, and it guards the wrong moment for
+ * the likeliest mistake. The whole row opens the editor, so the cross beside it
+ * is the easy thing to catch by accident — and the bar answers that at the
+ * bottom of the screen, on a clock, away from the row you were looking at. This
+ * catches the slip before anything has changed. The undo still follows, for a
+ * yes given about the wrong row.
+ */
+export function ConfirmDeleteActivity({
+  activity,
+  onClose,
+  onDeleted,
+}: {
+  activity: Activity
+  onClose: () => void
+  /** Handed the deleted activity so the caller can offer to put it back. */
+  onDeleted: (activity: Activity) => void
+}) {
+  const store = useStore()
+
+  return (
+    <Sheet title={`Delete ${activity.name} from ${formatDate(activity.at)}?`} onClose={onClose}>
+      <div className="row">
+        <button className="btn ghost" onClick={onClose}>
+          Keep it
+        </button>
+        <div className="spacer" />
+        <button
+          className="btn danger"
+          onClick={() => {
+            store.removeActivity(activity.id)
+            onClose()
+            onDeleted(activity)
+          }}
+        >
+          Delete
         </button>
       </div>
     </Sheet>
